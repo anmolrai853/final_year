@@ -1,0 +1,1571 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ddaysoftware.com//NONSGML DDay.iCal 1.0//EN
+X-PUBLISHED-TTL:PT5M
+X-WR-TIMEZONE:Europe/London
+BEGIN:VTIMEZONE
+TZID:GMT Standard Time
+BEGIN:STANDARD
+DTSTART:20241002T020000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYHOUR=2;BYMINUTE=0;BYMONTH=10
+TZNAME:GMT Standard Time
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0000
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:20240301T010000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYHOUR=1;BYMINUTE=0;BYMONTH=3
+TZNAME:GMT Daylight Time
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0100
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VTIMEZONE
+TZID:Europe/London
+BEGIN:STANDARD
+DTSTART:16010101T020000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
+TZOFFSETFROM:+0100
+TZOFFSETTO:-0000
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010101T010000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3
+TZOFFSETFROM:-0000
+TZOFFSETTO:+0100
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nLect
+ ure \nWks 9-12\,14 \nChlebikova\, Janka \nRichmond Building\, LT2 \nL6 \n
+DTEND;TZID=Europe/London:20250929T160000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250929T140000
+LOCATION:Richmond Building\, LT2
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=MO
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT2 
+UID:0ID13609669:2024-03-12T13:56:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nLect
+ ure \nWks 9-12\,14 \nChlebikova\, Janka \nRichmond Building\, LT2 \nL6 \n
+DTEND;TZID=Europe/London:20251103T160000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251103T140000
+LOCATION:Richmond Building\, LT2
+RRULE:FREQ=WEEKLY;COUNT=6;BYDAY=MO
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT2 
+UID:1ID13609669:2024-03-12T13:56:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Tut02
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nTuto
+ rial \nTut02 \nWks 9-12\,14 \nChlebikova\, Janka \nPortland Building\, 1.1
+ 1 \nL6 \n
+DTEND;TZID=Europe/London:20251003T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251003T110000
+LOCATION:Portland Building\, 1.11
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=FR
+SEQUENCE:0
+SUMMARY:Portland Building\, 1.11 
+UID:0ID13609673:2024-05-16T11:40:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Tut02
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nTuto
+ rial \nTut02 \nWks 9-12\,14 \nChlebikova\, Janka \nPortland Building\, 1.1
+ 1 \nL6 \n
+DTEND;TZID=Europe/London:20251107T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251107T110000
+LOCATION:Portland Building\, 1.11
+RRULE:FREQ=WEEKLY;COUNT=5;BYDAY=FR
+SEQUENCE:0
+SUMMARY:Portland Building\, 1.11 
+UID:1ID13609673:2024-05-16T11:40:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Test02
+CATEGORIES:In Class Test
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nIn C
+ lass Test \nTest02 \nWk 16 \nPortland Building\, 0.34 \nL6 \n
+DTEND;TZID=Europe/London:20251119T160000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251119T140000
+LOCATION:Portland Building\, 0.34
+SEQUENCE:0
+SUMMARY:Portland Building\, 0.34 
+UID:0ID13609679:2024-03-12T14:13:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Andrikopoulou Elisavet
+CATEGORIES:M26507/2
+CATEGORIES:BUSINESS ANALYTICS
+CATEGORIES:Workshop
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M26507/2 \nBUSINESS ANALYTICS \nTeaching Event \nWorkshop \nWks
+  26-31\,33-34\,38 \nAndrikopoulou\, Elisavet \nFuture Technology Centre\, 
+ Floor 1 \nL6 \n
+DTEND;TZID=Europe/London:20260129T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260129T100000
+LOCATION:Future Technology Centre\, Floor 1
+RRULE:FREQ=WEEKLY;COUNT=6;BYDAY=TH
+SEQUENCE:0
+SUMMARY:Future Technology Centre\, Floor 1 
+UID:0ID13609869:2024-03-12T16:53:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Andrikopoulou Elisavet
+CATEGORIES:M26507/2
+CATEGORIES:BUSINESS ANALYTICS
+CATEGORIES:Workshop
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M26507/2 \nBUSINESS ANALYTICS \nTeaching Event \nWorkshop \nWks
+  26-31\,33-34\,38 \nAndrikopoulou\, Elisavet \nFuture Technology Centre\, 
+ Floor 1 \nL6 \n
+DTEND;TZID=Europe/London:20260319T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260319T100000
+LOCATION:Future Technology Centre\, Floor 1
+RRULE:FREQ=WEEKLY;COUNT=2;BYDAY=TH
+SEQUENCE:0
+SUMMARY:Future Technology Centre\, Floor 1 
+UID:1ID13609869:2024-03-12T16:53:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Andrikopoulou Elisavet
+CATEGORIES:M26507/2
+CATEGORIES:BUSINESS ANALYTICS
+CATEGORIES:Workshop
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M26507/2 \nBUSINESS ANALYTICS \nTeaching Event \nWorkshop \nWks
+  26-31\,33-34\,38 \nAndrikopoulou\, Elisavet \nFuture Technology Centre\, 
+ Floor 1 \nL6 \n
+DTEND;TZID=Europe/London:20260423T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260423T100000
+LOCATION:Future Technology Centre\, Floor 1
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=TH
+SEQUENCE:0
+SUMMARY:Future Technology Centre\, Floor 1 
+UID:2ID13609869:2024-03-12T16:53:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Peart Amanda
+CATEGORIES:M30225/2
+CATEGORIES:DISTRIBUTED SYSTEMS AND SECURITY
+CATEGORIES:Tut01
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M30225/2 \nDISTRIBUTED SYSTEMS AND SECURITY \nTeaching Event \n
+ Tutorial \nTut01 \nWks 26-31\,33 \nPeart\, Amanda \nLion Gate Building\, 2
+ .04a \nL6 \n
+DTEND;TZID=Europe/London:20260127T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260127T110000
+LOCATION:Lion Gate Building\, 2.04a
+RRULE:FREQ=WEEKLY;COUNT=6;BYDAY=TU
+SEQUENCE:0
+SUMMARY:Lion Gate Building\, 2.04a 
+UID:0ID13609874:2024-05-20T15:01:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Peart Amanda
+CATEGORIES:M30225/2
+CATEGORIES:DISTRIBUTED SYSTEMS AND SECURITY
+CATEGORIES:Tut01
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M30225/2 \nDISTRIBUTED SYSTEMS AND SECURITY \nTeaching Event \n
+ Tutorial \nTut01 \nWks 26-31\,33 \nPeart\, Amanda \nLion Gate Building\, 2
+ .04a \nL6 \n
+DTEND;TZID=Europe/London:20260317T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260317T110000
+LOCATION:Lion Gate Building\, 2.04a
+RRULE:FREQ=WEEKLY;COUNT=2;BYDAY=TU
+SEQUENCE:0
+SUMMARY:Lion Gate Building\, 2.04a 
+UID:1ID13609874:2024-05-20T15:01:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Ahmad Fahad
+CATEGORIES:M30225/2
+CATEGORIES:DISTRIBUTED SYSTEMS AND SECURITY
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M30225/2 \nDISTRIBUTED SYSTEMS AND SECURITY \nTeaching Event \n
+ Lecture \nWks 38 \nAhmad\, Fahad \nPark Building\, 1.23 \nL6 \n
+DTEND;TZID=Europe/London:20260421T100000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260421T090000
+LOCATION:Park Building\, 1.23
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=TU
+SEQUENCE:0
+SUMMARY:Park Building\, 1.23 
+UID:0ID13609885:2024-03-12T17:03:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Ahmad Fahad
+CATEGORIES:Boadi Priscilla
+CATEGORIES:M30225/2
+CATEGORIES:DISTRIBUTED SYSTEMS AND SECURITY
+CATEGORIES:Comp01
+CATEGORIES:Computer Aided Teaching
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M30225/2 \nDISTRIBUTED SYSTEMS AND SECURITY \nTeaching Event \n
+ Computer Aided Teaching \nComp01 \nWks 38 \nAhmad\, Fahad\, Boadi\, Prisci
+ lla \nLion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\, 
+ 0.14a IT Multimedia Lab \nL6 \n
+DTEND;TZID=Europe/London:20260424T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260424T090000
+LOCATION:Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\
+ , 0.14a IT Multimedia Lab
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=FR
+SEQUENCE:0
+SUMMARY:Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\,
+  0.14a IT Multimedia Lab 
+UID:0ID13609889:2024-05-16T16:46:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Kagalidis Ioannis
+CATEGORIES:M33174/1
+CATEGORIES:ARTIFICIAL INTELLIGENCE
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M33174/1 \nARTIFICIAL INTELLIGENCE \nTeaching Event \nLecture \
+ nWks 9-12\,14 \nKagalidis\, Ioannis \nBurnaby Building\, 3.30 \nL6 \n
+DTEND;TZID=Europe/London:20250929T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250929T090000
+LOCATION:Burnaby Building\, 3.30
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=MO
+SEQUENCE:0
+SUMMARY:Burnaby Building\, 3.30 
+UID:0ID13610625:2024-05-16T11:51:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Kagalidis Ioannis
+CATEGORIES:M33174/1
+CATEGORIES:ARTIFICIAL INTELLIGENCE
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M33174/1 \nARTIFICIAL INTELLIGENCE \nTeaching Event \nLecture \
+ nWks 9-12\,14 \nKagalidis\, Ioannis \nBurnaby Building\, 3.30 \nL6 \n
+DTEND;TZID=Europe/London:20251103T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251103T090000
+LOCATION:Burnaby Building\, 3.30
+RRULE:FREQ=WEEKLY;COUNT=7;BYDAY=MO
+SEQUENCE:0
+SUMMARY:Burnaby Building\, 3.30 
+UID:1ID13610625:2024-05-16T11:51:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Kagalidis Ioannis
+CATEGORIES:Ghahremani Mani
+CATEGORIES:Paraskelidis Athanasios
+CATEGORIES:M22733/1
+CATEGORIES:COMP TUTORIAL LEVEL 6
+CATEGORIES:Comp-Sci
+CATEGORIES:Comp-Sci
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M22733/1 \nCOMP TUTORIAL LEVEL 6 \nTeaching Event \nTutorial \n
+ Comp-Sci\; Comp-Sci \nWk 16 \nKagalidis\, Ioannis\, Ghahremani\, Mani\, Pa
+ raskelidis\, Athanasios \nRichmond Building\, LT2 \nL6 \n
+DTEND;TZID=Europe/London:20251118T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251118T100000
+LOCATION:Richmond Building\, LT2
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT2 
+UID:0ID13619852:2024-04-08T13:05:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Kagalidis Ioannis
+CATEGORIES:Ghahremani Mani
+CATEGORIES:Paraskelidis Athanasios
+CATEGORIES:M22733/2
+CATEGORIES:COMP TUTORIAL LEVEL 6
+CATEGORIES:Comp-Sci
+CATEGORIES:Comp-Sci
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M22733/2 \nCOMP TUTORIAL LEVEL 6 \nTeaching Event \nTutorial \n
+ Comp-Sci\; Comp-Sci \nWks 26\,34 \nKagalidis\, Ioannis\, Ghahremani\, Mani
+ \, Paraskelidis\, Athanasios \nRichmond Building\, LT2 \nL6 \n
+DTEND;TZID=Europe/London:20260126T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260126T100000
+LOCATION:Richmond Building\, LT2
+RRULE:FREQ=WEEKLY;INTERVAL=8;COUNT=2;BYDAY=MO
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT2 
+UID:0ID13619853:2024-04-08T13:05:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Kagalidis Ioannis
+CATEGORIES:Toptan Carrie
+CATEGORIES:M33174/1
+CATEGORIES:ARTIFICIAL INTELLIGENCE
+CATEGORIES:Comp2
+CATEGORIES:Computer Aided Teaching
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M33174/1 \nARTIFICIAL INTELLIGENCE \nTeaching Event \nComputer 
+ Aided Teaching \nComp2 \nWks 9-12\,14 \nKagalidis\, Ioannis\, Toptan\, Car
+ rie \nLion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\, 
+ 0.14a IT Multimedia Lab \nL6 \n
+DTEND;TZID=Europe/London:20250930T140000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250930T120000
+LOCATION:Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\
+ , 0.14a IT Multimedia Lab
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=TU
+SEQUENCE:0
+SUMMARY:Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\,
+  0.14a IT Multimedia Lab 
+UID:0ID13622691:2024-05-16T11:55:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Kagalidis Ioannis
+CATEGORIES:Toptan Carrie
+CATEGORIES:M33174/1
+CATEGORIES:ARTIFICIAL INTELLIGENCE
+CATEGORIES:Comp2
+CATEGORIES:Computer Aided Teaching
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M33174/1 \nARTIFICIAL INTELLIGENCE \nTeaching Event \nComputer 
+ Aided Teaching \nComp2 \nWks 9-12\,14 \nKagalidis\, Ioannis\, Toptan\, Car
+ rie \nLion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\, 
+ 0.14a IT Multimedia Lab \nL6 \n
+DTEND;TZID=Europe/London:20251104T140000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251104T120000
+LOCATION:Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\
+ , 0.14a IT Multimedia Lab
+RRULE:FREQ=WEEKLY;COUNT=7;BYDAY=TU
+SEQUENCE:0
+SUMMARY:Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\,
+  0.14a IT Multimedia Lab 
+UID:1ID13622691:2024-05-16T11:55:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Peart Amanda
+CATEGORIES:M30225/2
+CATEGORIES:DISTRIBUTED SYSTEMS AND SECURITY
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M30225/2 \nDISTRIBUTED SYSTEMS AND SECURITY \nTeaching Event \n
+ Lecture \nWks 26-31\,33 \nPeart\, Amanda \nPark Building\, 1.23 \nL6 \n
+DTEND;TZID=Europe/London:20260127T100000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260127T090000
+LOCATION:Park Building\, 1.23
+RRULE:FREQ=WEEKLY;COUNT=6;BYDAY=TU
+SEQUENCE:0
+SUMMARY:Park Building\, 1.23 
+UID:0ID13622737:2024-05-16T17:17:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Peart Amanda
+CATEGORIES:M30225/2
+CATEGORIES:DISTRIBUTED SYSTEMS AND SECURITY
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M30225/2 \nDISTRIBUTED SYSTEMS AND SECURITY \nTeaching Event \n
+ Lecture \nWks 26-31\,33 \nPeart\, Amanda \nPark Building\, 1.23 \nL6 \n
+DTEND;TZID=Europe/London:20260317T100000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260317T090000
+LOCATION:Park Building\, 1.23
+RRULE:FREQ=WEEKLY;COUNT=2;BYDAY=TU
+SEQUENCE:0
+SUMMARY:Park Building\, 1.23 
+UID:1ID13622737:2024-05-16T17:17:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Paraskelidis Athanasios
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00306/1\; I00547/1 \nU0056PYC | BSc (Hons) Computer Science | 
+ Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3 | Te
+ aching Block 1 \nInduction Event \nInduction Wk Event\; Induction Wk Event
+  \nWk 8 \nParaskelidis\, Athanasios \nRichmond Building\, LT2 \nCourse Lea
+ der Meetings \n
+DTEND;TZID=Europe/London:20250923T140000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250923T130000
+LOCATION:Richmond Building\, LT2
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT2 
+UID:0ID13623301:2024-05-23T17:27:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Gorse Eilish
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I02073/1
+CATEGORIES:U3640FTC | BSC COMPUTER SCIENCE AND ADVANCED TECHNOLOGIES | Year
+  1 | Teaching Bl
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00353/1\; I00350/1\; I00469/1\; I00306/1\; I00547/1\; I00312/1
+ \; I00303/1\; I02073/1 \nU2686PYC | BSc (Hons) Data Science and Analytics 
+ | Year 3 | Teaching Block 1\; U2753PYC | BSc (Hons) Cyber Security and For
+ ensic Computing | Year 3 | Teaching \; U0968PYC | BSc (Hons) Software Engi
+ neering | Year 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Scien
+ ce | Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3
+  | Teaching Block 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching 
+ Block 1\; U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1\; U3640FTC | BSC COMPUTER SCIENCE AND ADVANCED TECHNOLOGI
+ ES | Year 1 | Teaching Bl \nInduction Event \nInduction Wk Event\; Inducti
+ on Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event
+ \; Induction Wk Event\; Induction Wk Event\; Induction Wk Event \nWk 8 \nG
+ orse\, Eilish \nRichmond Building\, LT1 \nEnterprise Talk \n
+DTEND;TZID=Europe/London:20250923T150000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250923T140000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13623306:2024-05-23T17:35:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00350/1\; I00353/1\; I00469/1\; I00303/1\; I00306/1\; I00547/1
+ \; I00312/1 \nU2753PYC | BSc (Hons) Cyber Security and Forensic Computing 
+ | Year 3 | Teaching \; U2686PYC | BSc (Hons) Data Science and Analytics | 
+ Year 3 | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Y
+ ear 3 | Teaching Block 1\; U3508PYC | BSc (Hons) Computer Networks and Sec
+ urity | Year 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science
+  | Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3 |
+  Teaching Block 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Bl
+ ock 1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induct
+ ion Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Even
+ t\; Induction Wk Event \nWk 8 \nUsher\, Shelley \nRichmond Building\, LT1 
+ \nProjects Introduction \n
+DTEND;TZID=Europe/London:20250923T170000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250923T150000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13623307:2024-05-23T17:38:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00306/1\; I00547/1 \nU0056PYC | BSc (Hons) Computer Science | 
+ Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3 | Te
+ aching Block 1 \nInduction Event \nInduction Wk Event\; Induction Wk Event
+  \nWk 8 \nChlebikova\, Janka \nRichmond Building\, LT1 \nIntroduction to T
+ HEOCS \n
+DTEND;TZID=Europe/London:20250924T140000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250924T130000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13623311:2024-05-23T17:48:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Khusainov Rinat
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I02073/1
+CATEGORIES:U3640FTC | BSC COMPUTER SCIENCE AND ADVANCED TECHNOLOGIES | Year
+  1 | Teaching Bl
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00303/1\; I00306/1\; I00547/1\; I00312/1\; I00350/1\; I00353/1
+ \; I00469/1\; I02073/1 \nU3508PYC | BSc (Hons) Computer Networks and Secur
+ ity | Year 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science |
+  Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3 | T
+ eaching Block 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Bloc
+ k 1\; U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Year 3
+  | Teaching \; U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 |
+  Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year 3 | 
+ Teaching Block 1\; U3640FTC | BSC COMPUTER SCIENCE AND ADVANCED TECHNOLOGI
+ ES | Year 1 | Teaching Bl \nInduction Event \nInduction Wk Event\; Inducti
+ on Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event
+ \; Induction Wk Event\; Induction Wk Event\; Induction Wk Event \nWk 8 \nK
+ husainov\, Rinat \nRichmond Building\, LT1 \nResearch and Innovation Talk 
+ \n
+DTEND;TZID=Europe/London:20250924T160000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250924T150000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13623312:2024-05-23T17:50:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Dennis Matt
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I02073/1
+CATEGORIES:U3640FTC | BSC COMPUTER SCIENCE AND ADVANCED TECHNOLOGIES | Year
+  1 | Teaching Bl
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00350/1\; I00353/1\; I00312/1\; I00469/1\; I00303/1\; I00547/1
+ \; I00306/1\; I02073/1 \nU2753PYC | BSc (Hons) Cyber Security and Forensic
+  Computing | Year 3 | Teaching \; U2686PYC | BSc (Hons) Data Science and A
+ nalytics | Year 3 | Teaching Block 1\; U0580PYC | BSc (Hons) Computing | Y
+ ear 3 | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Ye
+ ar 3 | Teaching Block 1\; U3508PYC | BSc (Hons) Computer Networks and Secu
+ rity | Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year
+  3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 3 | 
+ Teaching Block 1\; U3640FTC | BSC COMPUTER SCIENCE AND ADVANCED TECHNOLOGI
+ ES | Year 1 | Teaching Bl \nInduction Event \nInduction Wk Event\; Inducti
+ on Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event
+ \; Induction Wk Event\; Induction Wk Event\; Induction Wk Event \nWk 8 \nD
+ ennis\, Matt \nRichmond Building\, LT1 \nCareers and Volunteering \n
+DTEND;TZID=Europe/London:20250925T160000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250925T150000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13623314:2024-05-23T17:53:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Beukman Ronel
+CATEGORIES:I00311/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 2 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00349/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 2 | Teaching
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00352/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 | Teac
+ hing Block 1
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00468/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 2 | Teaching B
+ lock 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00302/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 2 | 
+ Teaching Block 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00305/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 2 | Teaching Block
+  1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00546/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 2 | Teaching Block 1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00311/1\; I00312/1\; I00349/1\; I00350/1\; I00352/1\; I00353/1
+ \; I00468/1\; I00306/1\; I00302/1\; I00303/1\; I00305/1\; I00469/1\; I0054
+ 6/1\; I00547/1 \nU0580PYC | BSc (Hons) Computing | Year 2 | Teaching Block
+  1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1\; U2753PY
+ C | BSc (Hons) Cyber Security and Forensic Computing | Year 2 | Teaching \
+ ; U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Year 3 | T
+ eaching \; U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 | Tea
+ ching Block 1\; U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 
+ | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year 2 |
+  Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 3 | Teac
+ hing Block 1\; U3508PYC | BSc (Hons) Computer Networks and Security | Year
+  2 | Teaching Block 1\; U3508PYC | BSc (Hons) Computer Networks and Securi
+ ty | Year 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | 
+ Year 2 | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Y
+ ear 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 2 | Tea
+ ching Block 1\; U2515PYC | MEng Computer Science | Year 3 | Teaching Block
+  1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induction
+  Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\;
+  Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction 
+ Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; 
+ Induction Wk Event \nWk 8 \nBeukman\, Ronel \nAnglesea Building\, 1.02 \nD
+ irect Entry Students Only: Welcome to the University \n
+DTEND;TZID=Europe/London:20250922T120000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250922T110000
+LOCATION:Anglesea Building\, 1.02
+SEQUENCE:0
+SUMMARY:Anglesea Building\, 1.02 
+UID:0ID13623328:2024-05-23T18:29:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Han Xia
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00305/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 2 | Teaching Block
+  1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00311/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 2 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00349/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 2 | Teaching
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00352/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 | Teac
+ hing Block 1
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00468/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 2 | Teaching B
+ lock 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00546/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 2 | Teaching Block 1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00302/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 2 | 
+ Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00303/1\; I00305/1\; I00306/1\; I00311/1\; I00312/1\; I00349/1
+ \; I00350/1\; I00352/1\; I00353/1\; I00468/1\; I00469/1\; I00546/1\; I0054
+ 7/1\; I00302/1 \nU3508PYC | BSc (Hons) Computer Networks and Security | Ye
+ ar 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 2 
+ | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 3 | Tea
+ ching Block 1\; U0580PYC | BSc (Hons) Computing | Year 2 | Teaching Block 
+ 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1\; U2753PYC
+  | BSc (Hons) Cyber Security and Forensic Computing | Year 2 | Teaching \;
+  U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Year 3 | Te
+ aching \; U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 | Teac
+ hing Block 1\; U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 |
+  Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year 2 | 
+ Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year 3 | T
+ eaching Block 1\; U2515PYC | MEng Computer Science | Year 2 | Teaching Blo
+ ck 1\; U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1\; U350
+ 8PYC | BSc (Hons) Computer Networks and Security | Year 2 | Teaching Block
+  1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induction
+  Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\;
+  Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction 
+ Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; 
+ Induction Wk Event \nWk 8 \nHan\, Xia \nDirect Entry Students Only: Campus
+  Tour \n
+DTEND;TZID=Europe/London:20250922T150000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250922T140000
+SEQUENCE:0
+SUMMARY:Timetable event
+UID:0ID13623329:2024-05-23T18:33:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Han Xia
+CATEGORIES:I00546/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 2 | Teaching Block 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00349/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 2 | Teaching
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00352/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 | Teac
+ hing Block 1
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00468/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 2 | Teaching B
+ lock 1
+CATEGORIES:I00302/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 2 | 
+ Teaching Block 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00305/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 2 | Teaching Block
+  1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00311/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 2 | Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00546/1\; I00469/1\; I00547/1\; I00312/1\; I00349/1\; I00350/1
+ \; I00352/1\; I00353/1\; I00468/1\; I00302/1\; I00303/1\; I00305/1\; I0030
+ 6/1\; I00311/1 \nU2515PYC | MEng Computer Science | Year 2 | Teaching Bloc
+ k 1\; U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching Block
+  1\; U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1\; U0580P
+ YC | BSc (Hons) Computing | Year 3 | Teaching Block 1\; U2753PYC | BSc (Ho
+ ns) Cyber Security and Forensic Computing | Year 2 | Teaching \; U2753PYC 
+ | BSc (Hons) Cyber Security and Forensic Computing | Year 3 | Teaching \; 
+ U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 | Teaching Block
+  1\; U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teaching 
+ Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year 2 | Teaching B
+ lock 1\; U3508PYC | BSc (Hons) Computer Networks and Security | Year 2 | T
+ eaching Block 1\; U3508PYC | BSc (Hons) Computer Networks and Security | Y
+ ear 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 2
+  | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 3 | Te
+ aching Block 1\; U0580PYC | BSc (Hons) Computing | Year 2 | Teaching Block
+  1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induction
+  Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\;
+  Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction 
+ Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; 
+ Induction Wk Event \nWk 8 \nHan\, Xia \nRichmond Building\, LT2 \nDirect E
+ ntry Students only: Feedback Sessions \n
+DTEND;TZID=Europe/London:20250926T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250926T120000
+LOCATION:Richmond Building\, LT2
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT2 
+UID:0ID13623330:2024-05-23T18:36:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00305/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 2 | Teaching Block
+  1
+CATEGORIES:I00311/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 2 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00349/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 2 | Teaching
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00352/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 | Teac
+ hing Block 1
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00468/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 2 | Teaching B
+ lock 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00546/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 2 | Teaching Block 1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00302/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 2 | 
+ Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00303/1\; I00305/1\; I00311/1\; I00312/1\; I00349/1\; I00350/1
+ \; I00352/1\; I00353/1\; I00468/1\; I00469/1\; I00546/1\; I00547/1\; I0030
+ 6/1\; I00302/1 \nU3508PYC | BSc (Hons) Computer Networks and Security | Ye
+ ar 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 2 
+ | Teaching Block 1\; U0580PYC | BSc (Hons) Computing | Year 2 | Teaching B
+ lock 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1\; U27
+ 53PYC | BSc (Hons) Cyber Security and Forensic Computing | Year 2 | Teachi
+ ng \; U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Year 3
+  | Teaching \; U2686PYC | BSc (Hons) Data Science and Analytics | Year 2 |
+  Teaching Block 1\; U2686PYC | BSc (Hons) Data Science and Analytics | Yea
+ r 3 | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year
+  2 | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year 
+ 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 2 | Teachin
+ g Block 1\; U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1\;
+  U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block 1\; U350
+ 8PYC | BSc (Hons) Computer Networks and Security | Year 2 | Teaching Block
+  1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induction
+  Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\;
+  Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction 
+ Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Event\; 
+ Induction Wk Event \nWk 8 \nChlebikova\, Janka \nAnglesea Building\, 0.03 
+ \nExchange Students Only: Introduction \n
+DTEND;TZID=Europe/London:20250922T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250922T120000
+LOCATION:Anglesea Building\, 0.03
+SEQUENCE:0
+SUMMARY:Anglesea Building\, 0.03 
+UID:0ID13623331:2024-05-23T18:38:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:Khaleghzadeh Hamidreza
+CATEGORIES:Adedeji Taiwo
+CATEGORIES:M34703/2
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/2
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:Online Lecture
+CATEGORIES:Online Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/2\; M34704/2 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nOnline Lecture\; Online Lecture \nWk 34 \nUsher\, Shelley\, 
+ Khaleghzadeh\, Hamidreza\, Adedeji\, Taiwo \nL6 \n
+DTEND;TZID=Europe/London:20260325T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260325T100000
+SEQUENCE:0
+SUMMARY:Timetable event
+UID:0ID13653325:2025-03-14T10:32:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:Smith Kirsten
+CATEGORIES:M34703/1
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/1
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:Lecture
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/1\; M34704/1 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nLecture\; Lecture \nWk 11 \nUsher\, Shelley\, Smith\, Kirste
+ n \nRichmond Building\, LT1 \nL6 \n
+DTEND;TZID=Europe/London:20251014T120000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251014T110000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13653344:2025-03-14T10:36:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:Khaleghzadeh Hamidreza
+CATEGORIES:M34703/2
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/2
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:Online Lecture
+CATEGORIES:Online Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/2\; M34704/2 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nOnline Lecture\; Online Lecture \nWks 26 \nUsher\, Shelley\,
+  Khaleghzadeh\, Hamidreza \nL6 \n
+DTEND;TZID=Europe/London:20260128T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260128T100000
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=WE
+SEQUENCE:0
+SUMMARY:Timetable event
+UID:0ID13653348:2025-03-14T10:37:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00469/1\; I00303/1\; I00306/1\; I00547/1\; I00312/1\; I00350/1
+ \; I00353/1 \nU0968PYC | BSc (Hons) Software Engineering | Year 3 | Teachi
+ ng Block 1\; U3508PYC | BSc (Hons) Computer Networks and Security | Year 3
+  | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 3 | Te
+ aching Block 1\; U2515PYC | MEng Computer Science | Year 3 | Teaching Bloc
+ k 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1\; U2753P
+ YC | BSc (Hons) Cyber Security and Forensic Computing | Year 3 | Teaching 
+ \; U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teaching Bl
+ ock 1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induct
+ ion Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Even
+ t\; Induction Wk Event \nWk 8 \nUsher\, Shelley \nRichmond Building\, LT1 
+ \nProjects session 3 \n
+DTEND;TZID=Europe/London:20250924T170000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250924T160000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13667890:2025-07-01T15:39:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00353/1\; I00469/1\; I00303/1\; I00306/1\; I00547/1\; I00312/1
+ \; I00350/1 \nU2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | 
+ Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Year 3 | T
+ eaching Block 1\; U3508PYC | BSc (Hons) Computer Networks and Security | Y
+ ear 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 3
+  | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3 | Teaching
+  Block 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1\; U
+ 2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Year 3 | Teac
+ hing  \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induct
+ ion Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Even
+ t\; Induction Wk Event \nWk 8 \nUsher\, Shelley \nBuckingham Building\, 3.
+ 06\; Buckingham Building\, 3.05\; Milldam Building\, LE0.05 \nProjects ses
+ sion 2 \n
+DTEND;TZID=Europe/London:20250924T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250924T093000
+LOCATION:Buckingham Building\, 3.06\; Buckingham Building\, 3.05\; Milldam 
+ Building\, LE0.05
+SEQUENCE:0
+SUMMARY:Buckingham Building\, 3.06\; Buckingham Building\, 3.05\; Milldam B
+ uilding\, LE0.05 
+UID:0ID13667891:2025-07-01T15:41:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00350/1\; I00353/1\; I00469/1\; I00303/1\; I00306/1\; I00547/1
+ \; I00312/1 \nU2753PYC | BSc (Hons) Cyber Security and Forensic Computing 
+ | Year 3 | Teaching \; U2686PYC | BSc (Hons) Data Science and Analytics | 
+ Year 3 | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Y
+ ear 3 | Teaching Block 1\; U3508PYC | BSc (Hons) Computer Networks and Sec
+ urity | Year 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science
+  | Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3 |
+  Teaching Block 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Bl
+ ock 1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induct
+ ion Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Even
+ t\; Induction Wk Event \nWk 8 \nUsher\, Shelley \nBuckingham Building\, 3.
+ 06\; Milldam Building\, LE0.05\; University Learning Centre\, 4.19 \nProje
+ cts session 5 \n
+DTEND;TZID=Europe/London:20250926T120000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250926T110000
+LOCATION:Buckingham Building\, 3.06\; Milldam Building\, LE0.05\; Universit
+ y Learning Centre\, 4.19
+SEQUENCE:0
+SUMMARY:Buckingham Building\, 3.06\; Milldam Building\, LE0.05\; University
+  Learning Centre\, 4.19 
+UID:0ID13667892:2025-07-01T15:45:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00350/1\; I00353/1\; I00469/1\; I00303/1\; I00306/1\; I00547/1
+ \; I00312/1 \nU2753PYC | BSc (Hons) Cyber Security and Forensic Computing 
+ | Year 3 | Teaching \; U2686PYC | BSc (Hons) Data Science and Analytics | 
+ Year 3 | Teaching Block 1\; U0968PYC | BSc (Hons) Software Engineering | Y
+ ear 3 | Teaching Block 1\; U3508PYC | BSc (Hons) Computer Networks and Sec
+ urity | Year 3 | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science
+  | Year 3 | Teaching Block 1\; U2515PYC | MEng Computer Science | Year 3 |
+  Teaching Block 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Bl
+ ock 1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induct
+ ion Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Even
+ t\; Induction Wk Event \nWk 8 \nUsher\, Shelley \nFuture Technology Centre
+ \, Floor 1\; Future Technology Centre\, Floor 2\; Lion Gate Building\, 0.1
+ 4b IT Multimedia Lab\; Lion Gate Building\, 0.14a IT Multimedia Lab \nProj
+ ects session 4 \n
+DTEND;TZID=Europe/London:20250925T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250925T093000
+LOCATION:Future Technology Centre\, Floor 1\; Future Technology Centre\, Fl
+ oor 2\; Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\
+ , 0.14a IT Multimedia Lab
+SEQUENCE:0
+SUMMARY:Future Technology Centre\, Floor 1\; Future Technology Centre\, Flo
+ or 2\; Lion Gate Building\, 0.14b IT Multimedia Lab\; Lion Gate Building\,
+  0.14a IT Multimedia Lab 
+UID:0ID13667893:2025-07-01T15:46:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:I00469/1
+CATEGORIES:U0968PYC | BSc (Hons) Software Engineering | Year 3 | Teaching B
+ lock 1
+CATEGORIES:I00303/1
+CATEGORIES:U3508PYC | BSc (Hons) Computer Networks and Security | Year 3 | 
+ Teaching Block 1
+CATEGORIES:I00306/1
+CATEGORIES:U0056PYC | BSc (Hons) Computer Science | Year 3 | Teaching Block
+  1
+CATEGORIES:I00547/1
+CATEGORIES:U2515PYC | MEng Computer Science | Year 3 | Teaching Block 1
+CATEGORIES:I00312/1
+CATEGORIES:U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1
+CATEGORIES:I00350/1
+CATEGORIES:U2753PYC | BSc (Hons) Cyber Security and Forensic Computing | Ye
+ ar 3 | Teaching
+CATEGORIES:I00353/1
+CATEGORIES:U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teac
+ hing Block 1
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Wk Event
+CATEGORIES:Induction Event
+CATEGORIES:Timetable event
+DESCRIPTION:I00469/1\; I00303/1\; I00306/1\; I00547/1\; I00312/1\; I00350/1
+ \; I00353/1 \nU0968PYC | BSc (Hons) Software Engineering | Year 3 | Teachi
+ ng Block 1\; U3508PYC | BSc (Hons) Computer Networks and Security | Year 3
+  | Teaching Block 1\; U0056PYC | BSc (Hons) Computer Science | Year 3 | Te
+ aching Block 1\; U2515PYC | MEng Computer Science | Year 3 | Teaching Bloc
+ k 1\; U0580PYC | BSc (Hons) Computing | Year 3 | Teaching Block 1\; U2753P
+ YC | BSc (Hons) Cyber Security and Forensic Computing | Year 3 | Teaching 
+ \; U2686PYC | BSc (Hons) Data Science and Analytics | Year 3 | Teaching Bl
+ ock 1 \nInduction Event \nInduction Wk Event\; Induction Wk Event\; Induct
+ ion Wk Event\; Induction Wk Event\; Induction Wk Event\; Induction Wk Even
+ t\; Induction Wk Event \nWk 8 \nUsher\, Shelley \nBuckingham Building\, 3.
+ 03 \nProjects session 6 \n
+DTEND;TZID=Europe/London:20250926T150000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20250926T140000
+LOCATION:Buckingham Building\, 3.03
+SEQUENCE:0
+SUMMARY:Buckingham Building\, 3.03 
+UID:0ID13667896:2025-07-01T15:52:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Adedeji Taiwo
+CATEGORIES:M34703/1
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/1
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:GpC
+CATEGORIES:GpC
+CATEGORIES:Seminar
+CATEGORIES:Seminar
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/1\; M34704/1 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nSeminar\; Seminar \nGpC\; GpC \nWk 10 \nAdedeji\, Taiwo \nBu
+ rnaby Building\, 3.30 \nL6 \n
+DTEND;TZID=Europe/London:20251009T170000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251009T160000
+LOCATION:Burnaby Building\, 3.30
+SEQUENCE:0
+SUMMARY:Burnaby Building\, 3.30 
+UID:0ID13670635:2025-08-05T15:38:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:Khaleghzadeh Hamidreza
+CATEGORIES:Adedeji Taiwo
+CATEGORIES:M34703/1
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/1
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:Lecture
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/1\; M34704/1 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nLecture\; Lecture \nWk 12 \nUsher\, Shelley\, Khaleghzadeh\,
+  Hamidreza\, Adedeji\, Taiwo \nRichmond Building\, LT1\; Portland Building
+ \, 0.28\; Anglesea Building\, 2.01 \nL6 \n
+DTEND;TZID=Europe/London:20251021T120000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251021T110000
+LOCATION:Richmond Building\, LT1\; Portland Building\, 0.28\; Anglesea Buil
+ ding\, 2.01
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1\; Portland Building\, 0.28\; Anglesea Build
+ ing\, 2.01 
+UID:0ID13670636:2025-08-05T15:51:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:Khaleghzadeh Hamidreza
+CATEGORIES:Adedeji Taiwo
+CATEGORIES:M34703/1
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/1
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:Lecture
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/1\; M34704/1 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nLecture\; Lecture \nWk 14 \nUsher\, Shelley\, Khaleghzadeh\,
+  Hamidreza\, Adedeji\, Taiwo \nRichmond Building\, LT1 \nL6 \n
+DTEND;TZID=Europe/London:20251106T100000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251106T090000
+LOCATION:Richmond Building\, LT1
+SEQUENCE:0
+SUMMARY:Richmond Building\, LT1 
+UID:0ID13670638:2025-08-05T15:57:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Smith Kirsten
+CATEGORIES:M34703/1
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/1
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:GP04
+CATEGORIES:GP04
+CATEGORIES:Seminar
+CATEGORIES:Seminar
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/1\; M34704/1 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nSeminar\; Seminar \nGP04\; GP04 \nWk 15 \nSmith\, Kirsten \n
+ Buckingham Building\, 3.05 \nL6 \n
+DTEND;TZID=Europe/London:20251114T140000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251114T130000
+LOCATION:Buckingham Building\, 3.05
+SEQUENCE:0
+SUMMARY:Buckingham Building\, 3.05 
+UID:0ID13670642:2025-08-05T16:05:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Usher Shelley
+CATEGORIES:Khaleghzadeh Hamidreza
+CATEGORIES:Adedeji Taiwo
+CATEGORIES:M34703/2
+CATEGORIES:STUDY PROJECT
+CATEGORIES:M34704/2
+CATEGORIES:ENGINEERING PROJECT
+CATEGORIES:Online Drop-In
+CATEGORIES:Online Drop-In
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M34703/2\; M34704/2 \nSTUDY PROJECT\; ENGINEERING PROJECT \nTea
+ ching Event \nOnline Drop-In\; Online Drop-In \nWk 38 \nUsher\, Shelley\, 
+ Khaleghzadeh\, Hamidreza\, Adedeji\, Taiwo \nOnline\, Online 13 \nL6 \n
+DTEND;TZID=Europe/London:20260422T110000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260422T100000
+LOCATION:Online\, Online 13
+SEQUENCE:0
+SUMMARY:Online\, Online 13 
+UID:0ID13670645:2025-08-05T16:12:00.0000000+01:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Lecture
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nLect
+ ure \nWk 19 \nChlebikova\, Janka \nBuckingham Building\, 1.01 \nL6 \n
+DTEND;TZID=Europe/London:20251209T120000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251209T100000
+LOCATION:Buckingham Building\, 1.01
+SEQUENCE:0
+SUMMARY:Buckingham Building\, 1.01 
+UID:0ID13676222:2025-11-04T11:28:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Serafino Paolo
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Tut04
+CATEGORIES:Tut02
+CATEGORIES:Tutorial
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nTuto
+ rial\; Tutorial \nTut04\; Tut02 \nWk 19 \nSerafino\, Paolo \nBurnaby Build
+ ing\, 4.05 \nL6 \n
+DTEND;TZID=Europe/London:20251212T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251212T110000
+LOCATION:Burnaby Building\, 4.05
+SEQUENCE:0
+SUMMARY:Burnaby Building\, 4.05 
+UID:0ID13676227:2025-11-04T11:32:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Chlebikova Janka
+CATEGORIES:M21276/1
+CATEGORIES:THEORETICAL COMPUTER SCIENCE
+CATEGORIES:Tut04
+CATEGORIES:Tut02
+CATEGORIES:Tutorial
+CATEGORIES:Tutorial
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M21276/1 \nTHEORETICAL COMPUTER SCIENCE \nTeaching Event \nTuto
+ rial\; Tutorial \nTut04\; Tut02 \nWk 20 \nChlebikova\, Janka \nBuckingham 
+ Building\, 3.05 \nL6 \n
+DTEND;TZID=Europe/London:20251219T130000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20251219T110000
+LOCATION:Buckingham Building\, 3.05
+SEQUENCE:0
+SUMMARY:Buckingham Building\, 3.05 
+UID:0ID13676230:2025-11-04T11:32:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Yang Linda
+CATEGORIES:Peart Amanda
+CATEGORIES:M30225/2
+CATEGORIES:DISTRIBUTED SYSTEMS AND SECURITY
+CATEGORIES:In Class Test
+CATEGORIES:Teaching Event
+CATEGORIES:Timetable event
+DESCRIPTION:M30225/2 \nDISTRIBUTED SYSTEMS AND SECURITY \nTeaching Event \n
+ In Class Test \nWk 34 \nYang\, Linda\, Peart\, Amanda \nLion Gate Building
+ \, 0.14a IT Multimedia Lab\; Lion Gate Building\, 0.14b IT Multimedia Lab\
+ ; Anglesea Building\, 2.03\; Portland Building\, 0.34 \n
+DTEND;TZID=Europe/London:20260325T163000
+DTSTAMP:20251210T193116Z
+DTSTART;TZID=Europe/London:20260325T143000
+LOCATION:Lion Gate Building\, 0.14a IT Multimedia Lab\; Lion Gate Building\
+ , 0.14b IT Multimedia Lab\; Anglesea Building\, 2.03\; Portland Building\,
+  0.34
+SEQUENCE:0
+SUMMARY:Lion Gate Building\, 0.14a IT Multimedia Lab\; Lion Gate Building\,
+  0.14b IT Multimedia Lab\; Anglesea Building\, 2.03\; Portland Building\, 
+ 0.34 
+UID:0ID13676267:2025-11-04T15:30:00.0000000+00:00@timetabling.port.ac.uk
+END:VEVENT
+END:VCALENDAR
