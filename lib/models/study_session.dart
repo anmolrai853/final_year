@@ -120,6 +120,7 @@ class StudySession {
   final bool isCompleted;
   final String? moduleCode;
   final String? notes;
+  final String? deadlineId; // Link to a deadline
 
   // Performance tracking fields
   final int? actualDurationMinutes; // Actual time spent studying
@@ -139,6 +140,7 @@ class StudySession {
     this.isCompleted = false,
     this.moduleCode,
     this.notes,
+    this.deadlineId,
     // Performance fields
     this.actualDurationMinutes,
     this.focusLevel,
@@ -157,6 +159,7 @@ class StudySession {
     bool? isCompleted,
     String? moduleCode,
     String? notes,
+    String? deadlineId,
     int? actualDurationMinutes,
     FocusLevel? focusLevel,
     int? interruptionCount,
@@ -174,6 +177,7 @@ class StudySession {
       isCompleted: isCompleted ?? this.isCompleted,
       moduleCode: moduleCode ?? this.moduleCode,
       notes: notes ?? this.notes,
+      deadlineId: deadlineId ?? this.deadlineId,
       actualDurationMinutes: actualDurationMinutes ?? this.actualDurationMinutes,
       focusLevel: focusLevel ?? this.focusLevel,
       interruptionCount: interruptionCount ?? this.interruptionCount,
@@ -192,7 +196,7 @@ class StudySession {
   // Performance metrics
   double get completionRate {
     if (actualDurationMinutes == null || durationMinutes == 0) return 0.0;
-    return (actualDurationMinutes! / durationMinutes).clamp(0.0, 2.0); // Can exceed 100%
+    return (actualDurationMinutes! / durationMinutes).clamp(0.0, 2.0);
   }
 
   double get efficiencyScore {
@@ -214,6 +218,7 @@ class StudySession {
       'isCompleted': isCompleted,
       'moduleCode': moduleCode,
       'notes': notes,
+      'deadlineId': deadlineId,
       'actualDurationMinutes': actualDurationMinutes,
       'focusLevel': focusLevel?.index,
       'interruptionCount': interruptionCount,
@@ -234,6 +239,7 @@ class StudySession {
       isCompleted: json['isCompleted'] ?? false,
       moduleCode: json['moduleCode'],
       notes: json['notes'],
+      deadlineId: json['deadlineId'],
       actualDurationMinutes: json['actualDurationMinutes'],
       focusLevel: json['focusLevel'] != null
           ? FocusLevel.values[json['focusLevel']]

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event.dart';
 import '../models/study_session.dart';
 import '../models/knowledge_node.dart';
+import '../models/deadline.dart';
 
 class StorageService {
   static final StorageService _instance = StorageService._internal();
@@ -19,8 +20,9 @@ class StorageService {
   static const String _eventLocationsKey = 'event_locations';
   static const String _calendarEventsKey = 'calendar_events';
   static const String _icsContentKey = 'ics_content';
+  static const String _deadlinesKey = 'deadlines';
+  static const String _notificationPrefsKey = 'notification_prefs';
 
-  /// Initialize shared preferences
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
   }
@@ -29,18 +31,14 @@ class StorageService {
 
   Future<bool> saveStudySessions(List<StudySession> sessions) async {
     if (_prefs == null) await initialize();
-
     final jsonList = sessions.map((s) => s.toJson()).toList();
-    final jsonString = jsonEncode(jsonList);
-    return await _prefs!.setString(_studySessionsKey, jsonString);
+    return await _prefs!.setString(_studySessionsKey, jsonEncode(jsonList));
   }
 
   List<StudySession> loadStudySessions() {
     if (_prefs == null) return [];
-
     final jsonString = _prefs!.getString(_studySessionsKey);
     if (jsonString == null) return [];
-
     try {
       final jsonList = jsonDecode(jsonString) as List;
       return jsonList.map((j) => StudySession.fromJson(j)).toList();
@@ -51,8 +49,7 @@ class StorageService {
   }
 
   Future<bool> addStudySession(StudySession session) async {
-    final sessions = loadStudySessions();
-    sessions.add(session);
+    final sessions = loadStudySessions()..add(session);
     return await saveStudySessions(sessions);
   }
 
@@ -67,14 +64,12 @@ class StorageService {
   }
 
   Future<bool> deleteStudySession(String sessionId) async {
-    final sessions = loadStudySessions();
-    sessions.removeWhere((s) => s.id == sessionId);
+    final sessions = loadStudySessions()..removeWhere((s) => s.id == sessionId);
     return await saveStudySessions(sessions);
   }
 
   List<StudySession> getStudySessionsForDay(DateTime day) {
-    final sessions = loadStudySessions();
-    return sessions.where((s) {
+    return loadStudySessions().where((s) {
       return s.startTime.year == day.year &&
           s.startTime.month == day.month &&
           s.startTime.day == day.day;
@@ -83,55 +78,120 @@ class StorageService {
   }
 
   List<StudySession> getStudySessionsForRange(DateTime start, DateTime end) {
-    final sessions = loadStudySessions();
-    return sessions.where((s) {
+    return loadStudySessions().where((s) {
       return s.startTime.isBefore(end) && s.endTime.isAfter(start);
     }).toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
   List<StudySession> getStudySessionsForWeek(DateTime weekStart) {
-    final weekEnd = weekStart.add(const Duration(days: 7));
-    return getStudySessionsForRange(weekStart, weekEnd);
+    return getStudySessionsForRange(weekStart, weekStart.add(const Duration(days: 7)));
   }
 
   Future<bool> toggleSessionCompletion(String sessionId) async {
     final sessions = loadStudySessions();
     final index = sessions.indexWhere((s) => s.id == sessionId);
     if (index != -1) {
-      sessions[index] = sessions[index].copyWith(
-        isCompleted: !sessions[index].isCompleted,
-      );
+      sessions[index] = sessions[index].copyWith(isCompleted: !sessions[index].isCompleted);
       return await saveStudySessions(sessions);
     }
     return false;
   }
 
-  // ==================== KNOWLEDGE MAPS (USER-CREATED) ====================
+  // ==================== DEADLINES ====================
+
+  Future<bool> saveDeadlines(List<Deadline> deadlines) async {
+    if (_prefs == null) await initialize();
+    final jsonList = deadlines.map((d) => d.toJson()).toList();
+    return await _prefs!.setString(_deadlinesKey, jsonEncode(jsonList));
+  }
+
+  List<Deadline> loadDeadlines() {
+    if (_prefs == null) return [];
+    final jsonString = _prefs!.getString(_deadlinesKey);
+    if (jsonString == null) return [];
+    try {
+      final jsonList = jsonDecode(jsonString) as List;
+      return jsonList.map((j) => Deadline.fromJson(j)).toList();
+    } catch (e) {
+      debugPrint('Error loading deadlines: $e');
+      return [];
+    }
+  }
+
+  Future<bool> addDeadline(Deadline deadline) async {
+    final deadlines = loadDeadlines()..add(deadline);
+    return await saveDeadlines(deadlines);
+  }
+
+  Future<bool> updateDeadline(Deadline updated) async {
+    final deadlines = loadDeadlines();
+    final index = deadlines.indexWhere((d) => d.id == updated.id);
+    if (index != -1) {
+      deadlines[index] = updated;
+      return await saveDeadlines(deadlines);
+    }
+    return false;
+  }
+
+  Future<bool> deleteDeadline(String deadlineId) async {
+    final deadlines = loadDeadlines()..removeWhere((d) => d.id == deadlineId);
+    return await saveDeadlines(deadlines);
+  }
+
+  List<Deadline> getUpcomingDeadlines() {
+    return loadDeadlines().where((d) => d.status != DeadlineStatus.completed).toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  List<Deadline> getOverdueDeadlines() {
+    return loadDeadlines().where((d) => d.isOverdue).toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  List<Deadline> getDeadlinesForModule(String moduleCode) {
+    return loadDeadlines().where((d) => d.moduleCode == moduleCode).toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  Future<bool> clearDeadlines() async {
+    if (_prefs == null) await initialize();
+    return await _prefs!.remove(_deadlinesKey);
+  }
+
+  // ==================== NOTIFICATION PREFERENCES ====================
+
+  Future<bool> saveNotificationPrefs(Map<String, dynamic> prefs) async {
+    if (_prefs == null) await initialize();
+    return await _prefs!.setString(_notificationPrefsKey, jsonEncode(prefs));
+  }
+
+  Map<String, dynamic>? loadNotificationPrefs() {
+    if (_prefs == null) return null;
+    final jsonString = _prefs!.getString(_notificationPrefsKey);
+    if (jsonString == null) return null;
+    try {
+      return jsonDecode(jsonString) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error loading notification prefs: $e');
+      return null;
+    }
+  }
+
+  // ==================== KNOWLEDGE MAPS ====================
 
   Future<bool> saveKnowledgeMap(KnowledgeMap map) async {
     if (_prefs == null) await initialize();
-
     final maps = loadKnowledgeMaps();
     final index = maps.indexWhere((m) => m.id == map.id);
-
-    if (index != -1) {
-      maps[index] = map;
-    } else {
-      maps.add(map);
-    }
-
-    final jsonList = maps.map((m) => m.toJson()).toList();
-    final jsonString = jsonEncode(jsonList);
-    return await _prefs!.setString(_knowledgeMapsKey, jsonString);
+    if (index != -1) { maps[index] = map; } else { maps.add(map); }
+    return await _prefs!.setString(_knowledgeMapsKey, jsonEncode(maps.map((m) => m.toJson()).toList()));
   }
 
   List<KnowledgeMap> loadKnowledgeMaps() {
     if (_prefs == null) return [];
-
     final jsonString = _prefs!.getString(_knowledgeMapsKey);
     if (jsonString == null) return [];
-
     try {
       final jsonList = jsonDecode(jsonString) as List;
       return jsonList.map((j) => KnowledgeMap.fromJson(j)).toList();
@@ -143,17 +203,9 @@ class StorageService {
 
   Future<bool> deleteKnowledgeMap(String mapId) async {
     if (_prefs == null) await initialize();
-
-    // Delete the map from the list
     final maps = loadKnowledgeMaps()..removeWhere((m) => m.id == mapId);
-    final result = await _prefs!.setString(
-        _knowledgeMapsKey,
-        jsonEncode(maps.map((m) => m.toJson()).toList())
-    );
-
-    // Also delete associated graph data
+    final result = await _prefs!.setString(_knowledgeMapsKey, jsonEncode(maps.map((m) => m.toJson()).toList()));
     await _prefs!.remove('$_knowledgeGraphDataKey$mapId');
-
     return result;
   }
 
@@ -161,26 +213,15 @@ class StorageService {
 
   Future<bool> saveKnowledgeGraphData(KnowledgeGraphData data) async {
     if (_prefs == null) await initialize();
-
-    final jsonString = jsonEncode(data.toJson());
-    return await _prefs!.setString(
-        '$_knowledgeGraphDataKey${data.mapId}',
-        jsonString
-    );
+    return await _prefs!.setString('$_knowledgeGraphDataKey${data.mapId}', jsonEncode(data.toJson()));
   }
 
   KnowledgeGraphData? getKnowledgeGraphData(String mapId) {
     if (_prefs == null) return null;
-
     final jsonString = _prefs!.getString('$_knowledgeGraphDataKey$mapId');
     if (jsonString == null) return null;
-
-    try {
-      return KnowledgeGraphData.fromJson(jsonDecode(jsonString));
-    } catch (e) {
-      debugPrint('Error loading knowledge graph data: $e');
-      return null;
-    }
+    try { return KnowledgeGraphData.fromJson(jsonDecode(jsonString)); }
+    catch (e) { debugPrint('Error loading knowledge graph data: $e'); return null; }
   }
 
   Future<bool> deleteKnowledgeGraphData(String mapId) async {
@@ -188,29 +229,20 @@ class StorageService {
     return await _prefs!.remove('$_knowledgeGraphDataKey$mapId');
   }
 
-  // ==================== KNOWLEDGE NODES & EDGES (Direct Access) ====================
-
   Future<bool> addKnowledgeNode(String mapId, KnowledgeNode node) async {
-    var data = getKnowledgeGraphData(mapId);
-    if (data == null) {
-      data = KnowledgeGraphData(mapId: mapId, nodes: [], edges: []);
-    }
-
-    final nodes = List<KnowledgeNode>.from(data.nodes)..add(node);
-    data = data.copyWith(nodes: nodes);
+    var data = getKnowledgeGraphData(mapId) ?? KnowledgeGraphData(mapId: mapId, nodes: [], edges: []);
+    data = data.copyWith(nodes: List<KnowledgeNode>.from(data.nodes)..add(node));
     return await saveKnowledgeGraphData(data);
   }
 
   Future<bool> updateKnowledgeNode(String mapId, KnowledgeNode updatedNode) async {
     var data = getKnowledgeGraphData(mapId);
     if (data == null) return false;
-
     final nodes = List<KnowledgeNode>.from(data.nodes);
     final index = nodes.indexWhere((n) => n.id == updatedNode.id);
     if (index != -1) {
       nodes[index] = updatedNode;
-      data = data.copyWith(nodes: nodes);
-      return await saveKnowledgeGraphData(data);
+      return await saveKnowledgeGraphData(data.copyWith(nodes: nodes));
     }
     return false;
   }
@@ -218,33 +250,18 @@ class StorageService {
   Future<bool> deleteKnowledgeNode(String mapId, String nodeId) async {
     var data = getKnowledgeGraphData(mapId);
     if (data == null) return false;
-
     final nodes = List<KnowledgeNode>.from(data.nodes)..removeWhere((n) => n.id == nodeId);
-    final edges = List<KnowledgeEdge>.from(data.edges)
-      ..removeWhere((e) => e.sourceId == nodeId || e.targetId == nodeId);
-
-    data = data.copyWith(nodes: nodes, edges: edges);
-    return await saveKnowledgeGraphData(data);
+    final edges = List<KnowledgeEdge>.from(data.edges)..removeWhere((e) => e.sourceId == nodeId || e.targetId == nodeId);
+    return await saveKnowledgeGraphData(data.copyWith(nodes: nodes, edges: edges));
   }
 
   Future<bool> addKnowledgeEdge(String mapId, KnowledgeEdge edge) async {
-    var data = getKnowledgeGraphData(mapId);
-    if (data == null) {
-      data = KnowledgeGraphData(mapId: mapId, nodes: [], edges: []);
-    }
-
+    var data = getKnowledgeGraphData(mapId) ?? KnowledgeGraphData(mapId: mapId, nodes: [], edges: []);
     final edges = List<KnowledgeEdge>.from(data.edges);
-
-    // Check if edge already exists
-    final exists = edges.any((e) =>
-    (e.sourceId == edge.sourceId && e.targetId == edge.targetId) ||
-        (e.sourceId == edge.targetId && e.targetId == edge.sourceId)
-    );
-
+    final exists = edges.any((e) => (e.sourceId == edge.sourceId && e.targetId == edge.targetId) || (e.sourceId == edge.targetId && e.targetId == edge.sourceId));
     if (!exists) {
       edges.add(edge);
-      data = data.copyWith(edges: edges);
-      return await saveKnowledgeGraphData(data);
+      return await saveKnowledgeGraphData(data.copyWith(edges: edges));
     }
     return false;
   }
@@ -252,67 +269,46 @@ class StorageService {
   Future<bool> deleteKnowledgeEdge(String mapId, String edgeId) async {
     var data = getKnowledgeGraphData(mapId);
     if (data == null) return false;
-
     final edges = List<KnowledgeEdge>.from(data.edges)..removeWhere((e) => e.id == edgeId);
-    data = data.copyWith(edges: edges);
-    return await saveKnowledgeGraphData(data);
+    return await saveKnowledgeGraphData(data.copyWith(edges: edges));
   }
 
   // ==================== EVENT LOCATIONS ====================
 
   Future<bool> saveEventLocation(String eventId, String location) async {
     if (_prefs == null) await initialize();
-
     final locations = loadEventLocations();
     locations[eventId] = location;
-
-    final jsonString = jsonEncode(locations);
-    return await _prefs!.setString(_eventLocationsKey, jsonString);
+    return await _prefs!.setString(_eventLocationsKey, jsonEncode(locations));
   }
 
   Map<String, String> loadEventLocations() {
     if (_prefs == null) return {};
-
     final jsonString = _prefs!.getString(_eventLocationsKey);
     if (jsonString == null) return {};
-
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
       return jsonMap.map((k, v) => MapEntry(k, v.toString()));
-    } catch (e) {
-      debugPrint('Error loading event locations: $e');
-      return {};
-    }
+    } catch (e) { debugPrint('Error loading event locations: $e'); return {}; }
   }
 
-  String? getEventLocation(String eventId) {
-    final locations = loadEventLocations();
-    return locations[eventId];
-  }
+  String? getEventLocation(String eventId) => loadEventLocations()[eventId];
 
   // ==================== CALENDAR EVENTS ====================
 
   Future<bool> saveCalendarEvents(List<CalendarEvent> events) async {
     if (_prefs == null) await initialize();
-
-    final jsonList = events.map((e) => e.toJson()).toList();
-    final jsonString = jsonEncode(jsonList);
-    return await _prefs!.setString(_calendarEventsKey, jsonString);
+    return await _prefs!.setString(_calendarEventsKey, jsonEncode(events.map((e) => e.toJson()).toList()));
   }
 
   List<CalendarEvent> loadCalendarEvents() {
     if (_prefs == null) return [];
-
     final jsonString = _prefs!.getString(_calendarEventsKey);
     if (jsonString == null) return [];
-
     try {
       final jsonList = jsonDecode(jsonString) as List;
       return jsonList.map((j) => CalendarEvent.fromJson(j)).toList();
-    } catch (e) {
-      debugPrint('Error loading calendar events: $e');
-      return [];
-    }
+    } catch (e) { debugPrint('Error loading calendar events: $e'); return []; }
   }
 
   // ==================== ICS CONTENT ====================
@@ -341,20 +337,12 @@ class StorageService {
 
   Future<bool> clearKnowledgeMaps() async {
     if (_prefs == null) await initialize();
-
-    // Delete all map data
     final maps = loadKnowledgeMaps();
-    for (final map in maps) {
-      await _prefs!.remove('$_knowledgeGraphDataKey${map.id}');
-    }
+    for (final map in maps) { await _prefs!.remove('$_knowledgeGraphDataKey${map.id}'); }
     return await _prefs!.remove(_knowledgeMapsKey);
   }
 
-  // ==================== MIGRATION ====================
-
   Future<void> migrateOldGraphs() async {
-    // This method can be called on app startup to migrate old module-based graphs
-    // For now, it just ensures the new system is ready
     debugPrint('StorageService initialized - using user-created maps system');
   }
 
@@ -364,24 +352,13 @@ class StorageService {
     final sessions = loadStudySessions();
     final maps = loadKnowledgeMaps();
     final events = loadCalendarEvents();
-
-    int totalNodes = 0;
-    int totalEdges = 0;
+    final deadlines = loadDeadlines();
+    int totalNodes = 0, totalEdges = 0;
     for (final map in maps) {
       final data = getKnowledgeGraphData(map.id);
-      if (data != null) {
-        totalNodes += data.nodes.length;
-        totalEdges += data.edges.length;
-      }
+      if (data != null) { totalNodes += data.nodes.length; totalEdges += data.edges.length; }
     }
-
-    return {
-      'events': events.length,
-      'sessions': sessions.length,
-      'maps': maps.length,
-      'nodes': totalNodes,
-      'edges': totalEdges,
-    };
+    return { 'events': events.length, 'sessions': sessions.length, 'maps': maps.length, 'nodes': totalNodes, 'edges': totalEdges, 'deadlines': deadlines.length };
   }
 
   // ==================== STUDY SPOTS ====================
@@ -397,10 +374,7 @@ class StorageService {
     if (_prefs == null) return [];
     final json = _prefs!.getString(_studySpotsKey);
     if (json == null) return [];
-    try {
-      return (jsonDecode(json) as List).cast<Map<String, dynamic>>();
-    } catch (e) {
-      return [];
-    }
+    try { return (jsonDecode(json) as List).cast<Map<String, dynamic>>(); }
+    catch (e) { return []; }
   }
 }

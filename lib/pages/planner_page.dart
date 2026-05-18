@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/timetable_controller.dart';
 import '../models/study_session.dart';
+import '../models/deadline.dart';
 import '../services/analytics_service.dart';
 import '../widgets/analytics_dashboard.dart';
 import '../widgets/session_completion_dialog.dart';
 import '../widgets/study_session_dialog.dart';
-import 'knowledge_graph_page.dart';
-import 'knowledge_maps_list_page.dart';
+import '../widgets/deadline_dialog.dart';
+import 'pomodoro_timer_page.dart';
 
 class PlannerPage extends StatefulWidget {
   const PlannerPage({super.key});
@@ -41,6 +42,8 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final overdueCount = _controller.getOverdueDeadlines().length;
+
     return Scaffold(
       backgroundColor: const Color(0xFF020617),
       body: SafeArea(
@@ -60,17 +63,28 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
                       color: Colors.white,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => _showAddSessionDialog(),
-                    icon: const Icon(Icons.add_circle_outline),
-                    color: const Color(0xFF3B82F6),
-                    iconSize: 28,
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => _showAddDeadlineDialog(),
+                        icon: const Icon(Icons.flag_outlined),
+                        color: const Color(0xFFF59E0B),
+                        iconSize: 24,
+                        tooltip: 'Add Deadline',
+                      ),
+                      IconButton(
+                        onPressed: () => _showAddSessionDialog(),
+                        icon: const Icon(Icons.add_circle_outline),
+                        color: const Color(0xFF3B82F6),
+                        iconSize: 28,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-            // Tab bar with 4 tabs
+            // Tab bar with 5 tabs
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -85,11 +99,33 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
                 ),
                 labelColor: Colors.white,
                 unselectedLabelColor: const Color(0xFF94A3B8),
-                tabs: const [
-                  Tab(text: 'Today'),
-                  Tab(text: 'Week'),
-                  Tab(text: 'Analytics'),
-                  Tab(text: 'Knowledge'),
+                labelPadding: EdgeInsets.zero,
+                tabs: [
+                  const Tab(text: 'Today'),
+                  const Tab(text: 'Week'),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Deadlines'),
+                        if (overdueCount > 0) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$overdueCount',
+                              style: const TextStyle(fontSize: 10, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const Tab(text: 'Analytics'),
                 ],
               ),
             ),
@@ -103,8 +139,8 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
                 children: [
                   _buildTodayTab(),
                   _buildWeekTab(),
+                  _buildDeadlinesTab(),
                   AnalyticsDashboard(),
-                  _buildKnowledgeTab(),
                 ],
               ),
             ),
@@ -113,6 +149,8 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
       ),
     );
   }
+
+  // ==================== TODAY TAB ====================
 
   Widget _buildTodayTab() {
     final today = DateTime.now();
@@ -123,11 +161,20 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
         .where((s) => s.isCompleted)
         .fold<int>(0, (sum, s) => sum + (s.actualDurationMinutes ?? s.durationMinutes));
 
+    // Deadlines due soon
+    final urgentDeadlines = _controller.getDeadlinesDueSoon(days: 3);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Urgent deadlines banner
+          if (urgentDeadlines.isNotEmpty) ...[
+            _buildUrgentDeadlinesBanner(urgentDeadlines),
+            const SizedBox(height: 16),
+          ],
+
           // Stats cards
           Row(
             children: [
@@ -208,6 +255,90 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
       ),
     );
   }
+
+  Widget _buildUrgentDeadlinesBanner(List<Deadline> deadlines) {
+    final overdue = deadlines.where((d) => d.isOverdue).toList();
+    final upcoming = deadlines.where((d) => !d.isOverdue).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: overdue.isNotEmpty
+              ? [const Color(0xFFEF4444).withOpacity(0.2), const Color(0xFFEF4444).withOpacity(0.05)]
+              : [const Color(0xFFF59E0B).withOpacity(0.2), const Color(0xFFF59E0B).withOpacity(0.05)],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: overdue.isNotEmpty
+              ? const Color(0xFFEF4444).withOpacity(0.4)
+              : const Color(0xFFF59E0B).withOpacity(0.4),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                overdue.isNotEmpty ? Icons.warning : Icons.flag,
+                size: 18,
+                color: overdue.isNotEmpty ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                overdue.isNotEmpty
+                    ? '${overdue.length} overdue deadline${overdue.length > 1 ? 's' : ''}'
+                    : '${upcoming.length} deadline${upcoming.length > 1 ? 's' : ''} due soon',
+                style: TextStyle(
+                  color: overdue.isNotEmpty ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...deadlines.take(3).map((d) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 6, height: 6,
+                  decoration: BoxDecoration(
+                    color: d.urgencyColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    d.title,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  d.timeRemainingText,
+                  style: TextStyle(color: d.urgencyColor, fontSize: 11),
+                ),
+              ],
+            ),
+          )),
+          if (deadlines.length > 3)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '+${deadlines.length - 3} more',
+                style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== WEEK TAB ====================
 
   Widget _buildWeekTab() {
     final weekStart = _getWeekStart(DateTime.now());
@@ -320,10 +451,7 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
                       ),
                       child: const Text(
                         'No sessions',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
-                        ),
+                        style: TextStyle(color: Color(0xFF64748B)),
                       ),
                     )
                   else
@@ -337,21 +465,380 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
     );
   }
 
-  // In _buildKnowledgeTab():
-  Widget _buildKnowledgeTab() {
-    return const KnowledgeMapsListPage(); // Use the new list page
+  // ==================== DEADLINES TAB ====================
+
+  Widget _buildDeadlinesTab() {
+    final allDeadlines = _controller.getAllDeadlines();
+    final active = allDeadlines.where((d) => d.status != DeadlineStatus.completed).toList();
+    final completed = allDeadlines.where((d) => d.status == DeadlineStatus.completed).toList();
+    final overdue = active.where((d) => d.isOverdue).toList();
+    final upcoming = active.where((d) => !d.isOverdue).toList();
+
+    if (allDeadlines.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.flag_outlined, size: 72, color: Colors.white.withOpacity(0.2)),
+            const SizedBox(height: 16),
+            const Text(
+              'No Deadlines Yet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Add your coursework deadlines\nto stay on top of things',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white.withOpacity(0.6)),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _showAddDeadlineDialog,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Deadline'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Summary stats
+          _buildDeadlineStats(active, completed),
+
+          const SizedBox(height: 20),
+
+          // Overdue section
+          if (overdue.isNotEmpty) ...[
+            _buildDeadlineSectionHeader(
+              'Overdue',
+              overdue.length,
+              const Color(0xFFEF4444),
+            ),
+            const SizedBox(height: 8),
+            ...overdue.map((d) => _buildDeadlineCard(d)),
+            const SizedBox(height: 20),
+          ],
+
+          // Upcoming section
+          if (upcoming.isNotEmpty) ...[
+            _buildDeadlineSectionHeader(
+              'Upcoming',
+              upcoming.length,
+              const Color(0xFF3B82F6),
+            ),
+            const SizedBox(height: 8),
+            ...upcoming.map((d) => _buildDeadlineCard(d)),
+            const SizedBox(height: 20),
+          ],
+
+          // Completed section
+          if (completed.isNotEmpty) ...[
+            _buildDeadlineSectionHeader(
+              'Completed',
+              completed.length,
+              const Color(0xFF10B981),
+            ),
+            const SizedBox(height: 8),
+            ...completed.take(5).map((d) => _buildDeadlineCard(d)),
+            if (completed.length > 5)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  '+${completed.length - 5} more completed',
+                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                ),
+              ),
+          ],
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildDeadlineStats(List<Deadline> active, List<Deadline> completed) {
+    final overdue = active.where((d) => d.isOverdue).length;
+    final dueThisWeek = active.where((d) => d.isDueThisWeek).length;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(12),
       ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildDeadlineStatItem('Active', '${active.length}', const Color(0xFF3B82F6)),
+          _buildDeadlineStatItem('This Week', '$dueThisWeek', const Color(0xFFF59E0B)),
+          _buildDeadlineStatItem('Overdue', '$overdue', const Color(0xFFEF4444)),
+          _buildDeadlineStatItem('Done', '${completed.length}', const Color(0xFF10B981)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeadlineStatItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDeadlineSectionHeader(String title, int count, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            '$count',
+            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDeadlineCard(Deadline deadline) {
+    final dateFormat = DateFormat('MMM d, yyyy');
+    final timeFormat = DateFormat('HH:mm');
+    final moduleColor = _controller.getModuleColor(deadline.moduleCode);
+    final loggedHours = _controller.getLoggedHoursForDeadline(deadline.id);
+
+    return GestureDetector(
+      onTap: () => _showEditDeadlineDialog(deadline),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: deadline.isOverdue
+                ? const Color(0xFFEF4444).withOpacity(0.5)
+                : deadline.status == DeadlineStatus.completed
+                ? const Color(0xFF10B981).withOpacity(0.3)
+                : const Color(0xFF1E293B),
+            width: deadline.isOverdue ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row: title + priority + status toggle
+            Row(
+              children: [
+                // Status toggle
+                GestureDetector(
+                  onTap: () => _controller.toggleDeadlineStatus(deadline.id),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: deadline.status == DeadlineStatus.completed
+                          ? const Color(0xFF10B981).withOpacity(0.2)
+                          : const Color(0xFF1E293B),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: deadline.status == DeadlineStatus.completed
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF475569),
+                        width: 2,
+                      ),
+                    ),
+                    child: deadline.status == DeadlineStatus.completed
+                        ? const Icon(Icons.check, size: 16, color: Color(0xFF10B981))
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Title
+                Expanded(
+                  child: Text(
+                    deadline.title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: deadline.status == DeadlineStatus.completed
+                          ? const Color(0xFF64748B)
+                          : Colors.white,
+                      decoration: deadline.status == DeadlineStatus.completed
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Priority badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: deadline.priority.color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: deadline.priority.color.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(deadline.priority.icon, size: 12, color: deadline.priority.color),
+                      const SizedBox(width: 4),
+                      Text(
+                        deadline.priority.displayName,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: deadline.priority.color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            // Bottom row: due date, module, hours
+            Row(
+              children: [
+                // Due date
+                Icon(Icons.schedule, size: 14, color: deadline.urgencyColor),
+                const SizedBox(width: 4),
+                Text(
+                  '${dateFormat.format(deadline.dueDate)} at ${timeFormat.format(deadline.dueDate)}',
+                  style: TextStyle(fontSize: 12, color: deadline.urgencyColor),
+                ),
+                const Spacer(),
+                // Module chip
+                if (deadline.moduleCode != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: moduleColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      deadline.moduleCode!,
+                      style: TextStyle(fontSize: 10, color: moduleColor, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+
+            // Hours progress (if estimated)
+            if (deadline.estimatedHours > 0) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  const Icon(Icons.hourglass_empty, size: 14, color: Color(0xFF64748B)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${loggedHours.toStringAsFixed(1)} / ${deadline.estimatedHours.toStringAsFixed(0)}h logged',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (loggedHours / deadline.estimatedHours).clamp(0.0, 1.0),
+                        backgroundColor: const Color(0xFF1E293B),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          loggedHours >= deadline.estimatedHours
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF3B82F6),
+                        ),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // Time remaining text
+            if (deadline.status != DeadlineStatus.completed) ...[
+              const SizedBox(height: 6),
+              Text(
+                deadline.timeRemainingText,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: deadline.urgencyColor,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==================== KNOWLEDGE TAB ====================
+
+  // ==================== SHARED WIDGETS ====================
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1E293B)),
+      ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
+          Icon(icon, color: color, size: 22),
           const SizedBox(height: 8),
           Text(
             value,
@@ -361,13 +848,9 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF94A3B8),
-            ),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -380,12 +863,11 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
         Text(
           value,
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 4),
         Text(
           label,
           style: const TextStyle(
@@ -397,232 +879,32 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildSessionCard(StudySession session) {
-    final timeFormat = DateFormat('HH:mm');
-    final isPast = session.isPast;
-    final hasPerformance = session.hasPerformanceData;
-
-    return Dismissible(
-      key: Key('planner_${session.id}'),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEF4444),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      confirmDismiss: (_) => _confirmDelete(session),
-      onDismissed: (_) => _deleteSession(session),
-      child: GestureDetector(
-        onTap: () => _showEditSessionDialog(session),
-        onLongPress: () => _toggleSessionComplete(session),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isPast ? const Color(0xFF0F172A).withOpacity(0.5) : const Color(0xFF0F172A),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: session.isCompleted
-                  ? const Color(0xFF10B981)
-                  : session.type.color.withOpacity(0.3),
-              width: session.isCompleted ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              // Type icon
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: session.type.color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  session.type.icon,
-                  color: session.type.color,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Session info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      session.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isPast ? Colors.white.withOpacity(0.5) : Colors.white,
-                        decoration: session.isCompleted ? TextDecoration.lineThrough : null,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 14,
-                          color: isPast ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${timeFormat.format(session.startTime)} - ${timeFormat.format(session.endTime)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isPast ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: session.type.color.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            session.type.displayName,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: session.type.color,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (hasPerformance) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 12,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${session.focusLevel?.stars ?? 0}/5 • ${session.efficiencyScore.toStringAsFixed(0)}% efficient',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Completion status
-              if (session.isCompleted && hasPerformance)
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '${session.focusLevel?.stars ?? 0}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              else if (session.isCompleted)
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF10B981),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                )
-              else if (isPast)
-                  const Icon(
-                    Icons.schedule,
-                    color: Color(0xFF64748B),
-                  ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModuleCard(String moduleCode) {
-    final color = _controller.getModuleColor(moduleCode);
-
-    return GestureDetector(
-      onTap: () => _openKnowledgeGraph(moduleCode),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Row(
+  Widget _buildEmptyState(String title, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Center(
+        child: Column(
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.account_tree,
-                color: color,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    moduleCode,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Tap to view knowledge map',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Icon(
-              Icons.arrow_forward_ios,
-              color: color,
-              size: 16,
+              Icons.event_note,
+              size: 48,
+              color: Colors.white.withOpacity(0.2),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 12,
+              ),
             ),
           ],
         ),
@@ -630,119 +912,95 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildEmptyState(String title, String subtitle) {
+  Widget _buildSessionCard(StudySession session) {
+    final timeFormat = DateFormat('HH:mm');
+    final color = session.type.color;
+    final canStartPomodoro = !session.isCompleted;
+
     return Container(
-      padding: const EdgeInsets.all(32),
-      alignment: Alignment.center,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: session.isCompleted
+              ? const Color(0xFF10B981).withOpacity(0.3)
+              : const Color(0xFF1E293B),
+        ),
+      ),
       child: Column(
         children: [
-          Icon(
-            Icons.inbox_outlined,
-            size: 64,
-            color: const Color(0xFF334155),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF64748B),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  DateTime _getWeekStart(DateTime date) {
-    final weekday = date.weekday;
-    return DateTime(date.year, date.month, date.day - (weekday - 1));
-  }
-
-  Future<bool> _confirmDelete(StudySession session) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Session'),
-        content: Text('Are you sure you want to delete "${session.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFEF4444),
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    return result ?? false;
-  }
-
-  Future<void> _deleteSession(StudySession session) async {
-    await _controller.deleteStudySession(session.id);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('"${session.title}" deleted'),
-          action: SnackBarAction(
-            label: 'Undo',
-            onPressed: () async {
-              await _controller.addStudySession(session);
-            },
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _toggleSessionComplete(StudySession session) async {
-    if (session.isCompleted) {
-      await _controller.toggleSessionCompletion(session.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('"${session.title}" marked incomplete'),
-            backgroundColor: const Color(0xFF64748B),
-          ),
-        );
-      }
-      return;
-    }
-
-    // Show completion dialog for rating
-    showDialog(
-      context: context,
-      builder: (context) => SessionCompletionDialog(
-        session: session,
-        onComplete: (updatedSession) async {
-          await _controller.updateStudySession(updatedSession);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Session completed! Efficiency: ${updatedSession.efficiencyScore.toStringAsFixed(0)}%'),
-                backgroundColor: const Color(0xFF10B981),
+          Row(
+            children: [
+              // Type icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  session.type.icon,
+                  color: color,
+                  size: 20,
+                ),
               ),
-            );
-          }
-        },
+              const SizedBox(width: 12),
+              // Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      session.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: session.isCompleted ? const Color(0xFF64748B) : Colors.white,
+                        decoration: session.isCompleted ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${timeFormat.format(session.startTime)} - ${timeFormat.format(session.endTime)} • ${session.durationMinutes} min',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Pomodoro button (for incomplete sessions)
+              if (canStartPomodoro)
+                IconButton(
+                  onPressed: () => _startPomodoro(session),
+                  icon: const Icon(Icons.play_circle_outline),
+                  color: const Color(0xFFEF4444),
+                  tooltip: 'Start Pomodoro',
+                ),
+              // Complete button
+              if (!session.isCompleted && session.isPast)
+                IconButton(
+                  onPressed: () => _showCompletionDialog(session),
+                  icon: const Icon(Icons.check_circle_outline),
+                  color: const Color(0xFF10B981),
+                )
+              else if (session.isCompleted)
+                const Icon(
+                  Icons.check_circle,
+                  color: Color(0xFF10B981),
+                  size: 24,
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
+
+  // ==================== DIALOGS ====================
 
   void _showAddSessionDialog() {
     showDialog(
@@ -751,19 +1009,45 @@ class _PlannerPageState extends State<PlannerPage> with SingleTickerProviderStat
     );
   }
 
-  void _showEditSessionDialog(StudySession session) {
+  void _showAddDeadlineDialog() {
     showDialog(
       context: context,
-      builder: (context) => StudySessionDialog(session: session),
+      builder: (context) => const DeadlineDialog(),
     );
   }
 
-  void _openKnowledgeGraph(String mapId) {
+  void _showEditDeadlineDialog(Deadline deadline) {
+    showDialog(
+      context: context,
+      builder: (context) => DeadlineDialog(deadline: deadline),
+    );
+  }
+
+  void _showCompletionDialog(StudySession session) {
+    showDialog(
+      context: context,
+      builder: (context) => SessionCompletionDialog(
+        session: session,
+        onComplete: (updatedSession) async {
+          await _controller.updateStudySession(updatedSession);
+        },
+      ),
+    );
+  }
+
+  void _startPomodoro(StudySession session) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => KnowledgeGraphPage(mapId: mapId),
+        builder: (context) => PomodoroTimerPage(session: session),
       ),
     );
+  }
+
+  // ==================== HELPERS ====================
+
+  DateTime _getWeekStart(DateTime date) {
+    final weekday = date.weekday;
+    return DateTime(date.year, date.month, date.day - (weekday - 1));
   }
 }

@@ -4,33 +4,25 @@ import 'planner_page.dart';
 import 'study_page.dart';
 import 'map_page.dart';
 import 'settings_page.dart';
+import '../navigation_state.dart' as nav;
+
+// Global key so any widget can trigger tab switches and map navigation
+final GlobalKey<HomeScreenState> homeScreenKey = GlobalKey<HomeScreenState>();
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  HomeScreen() : super(key: homeScreenKey);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late final PageController _pageController;
-  
-  final List<Widget> _pages = [
-    const TimetablePage(),
-    const PlannerPage(),
-    const StudyPage(),
-    const MapPage(),
-    const SettingsPage(),
-  ];
 
-  final List<String> _titles = [
-    'Timetable',
-    'Planner',
-    'Study',
-    'Map',
-    'Settings',
-  ];
+  // Holds a pending navigation destination for the map page
+  nav.MapDestination? _pendingDestination;
 
   @override
   void initState() {
@@ -42,6 +34,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// Called from anywhere to switch to the map tab and navigate to a destination
+  void navigateToMap(nav.MapDestination destination) {
+    setState(() {
+      _pendingDestination = destination;
+      _currentIndex = 3; // Map tab index
+    });
+    _pageController.animateToPage(
+      3,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _clearPendingDestination() {
+    setState(() {
+      _pendingDestination = null;
+    });
   }
 
   void _onTabTapped(int index) {
@@ -57,11 +68,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      const TimetablePage(),
+      const PlannerPage(),
+      const StudyPage(),
+      MapPage(
+        pendingDestination: _pendingDestination,
+        onDestinationHandled: _clearPendingDestination,
+      ),
+      const SettingsPage(),
+    ];
+
     return Scaffold(
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
-        children: _pages,
+        children: pages,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import '../navigation_state.dart';
 import '../services/storage_service.dart';
 
 // ─── Study Spot model ────────────────────────────────────────────────────────
@@ -12,7 +13,7 @@ class StudySpot {
   final String notes;
   final double lat;
   final double lng;
-  final String type; // 'custom' | 'library' | 'cafe' | 'campus'
+  final String type;
 
   StudySpot({
     required this.id,
@@ -27,18 +28,25 @@ class StudySpot {
       {'id': id, 'name': name, 'notes': notes, 'lat': lat, 'lng': lng, 'type': type};
 
   factory StudySpot.fromJson(Map<String, dynamic> j) => StudySpot(
-        id: j['id'],
-        name: j['name'],
-        notes: j['notes'] ?? '',
-        lat: (j['lat'] as num).toDouble(),
-        lng: (j['lng'] as num).toDouble(),
-        type: j['type'] ?? 'custom',
-      );
+    id: j['id'],
+    name: j['name'],
+    notes: j['notes'] ?? '',
+    lat: (j['lat'] as num).toDouble(),
+    lng: (j['lng'] as num).toDouble(),
+    type: j['type'] ?? 'custom',
+  );
 }
 
-// ─── Map Page ────────────────────────────────────────────────────────────────
+// ─── Map Page ─────────────────────────────────────────────────────────────────
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  final MapDestination? pendingDestination;
+  final VoidCallback? onDestinationHandled;
+
+  const MapPage({
+    super.key,
+    this.pendingDestination,
+    this.onDestinationHandled,
+  });
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -46,9 +54,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   static const String _apiKey = 'AIzaSyDoPAM28DmlbOFDPSWpvHh-HFCzr5g-oAM';
-
-  // Default to a central UK location — user sets uni from settings
-  static const LatLng _defaultUni = LatLng(51.5074, -0.1278);
+  static const LatLng _defaultUni = LatLng(50.7984, -1.0919); // Portsmouth
 
   GoogleMapController? _mapController;
   LatLng? _currentPosition;
@@ -62,8 +68,9 @@ class _MapPageState extends State<MapPage> {
 
   bool _loadingRoute = false;
   bool _locationReady = false;
-  String? _routeInfo; // e.g. "12 min · 1.4 km"
-  String _travelMode = 'walking'; // walking | transit | bicycling
+  String? _routeInfo;
+  String? _routeDestinationName;
+  String _travelMode = 'walking';
 
   final TextEditingController _uniSearchController = TextEditingController();
 
@@ -75,13 +82,73 @@ class _MapPageState extends State<MapPage> {
   }
 
   @override
-  void dispose() {
-    _mapController?.dispose();
-    _uniSearchController.dispose();
-    super.dispose();
+  void didUpdateWidget(MapPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Handle incoming navigation destination from timetable
+    if (widget.pendingDestination != null &&
+        widget.pendingDestination != oldWidget.pendingDestination) {
+      _handlePendingDestination(widget.pendingDestination!);
+      widget.onDestinationHandled?.call();
+    }
   }
 
-  // ── Location ──────────────────────────────────────────────────────────────
+  Future<void> _handlePendingDestination(
+      MapDestination destination) async {
+    // Geocode the building name/address then route to it
+    _showSnack('Finding ${destination.name}...');
+    await _geocodeAndRoute(destination.name, destination.address);
+  }
+
+  Future<void> _geocodeAndRoute(String name, String address) async {
+    if (_currentPosition == null) {
+      _showSnack('Waiting for your location...');
+      await _initLocation();
+      if (_currentPosition == null) {
+        _showSnack('Could not get your location. Please enable GPS.');
+        return;
+      }
+    }
+
+    final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$_apiKey');
+
+    try {
+      final res = await http.get(url);
+      final data = jsonDecode(res.body);
+
+      if (data['status'] == 'OK') {
+        final loc = data['results'][0]['geometry']['location'];
+        final destLatLng = LatLng(loc['lat'], loc['lng']);
+
+        // Add a marker for the destination
+        final markerId = MarkerId('destination_${DateTime.now().millisecondsSinceEpoch}');
+        setState(() {
+          _markers.removeWhere((m) => m.markerId.value.startsWith('destination_'));
+          _markers.add(Marker(
+            markerId: markerId,
+            position: destLatLng,
+            infoWindow: InfoWindow(title: name),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueRed),
+          ));
+        });
+
+        // Animate camera to show destination
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(destLatLng, 15),
+        );
+
+        // Get route from current position to destination
+        await _getDirectionsToLatLng(destLatLng, name);
+      } else {
+        _showSnack('Could not find "$name". Try editing the location name.');
+      }
+    } catch (e) {
+      _showSnack('Error finding location');
+    }
+  }
+
+  // ── Location ─────────────────────────────────────────────────────────────
 
   Future<void> _initLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -126,7 +193,6 @@ class _MapPageState extends State<MapPage> {
   void _refreshMarkers() {
     final markers = <Marker>{};
 
-    // Uni marker
     markers.add(Marker(
       markerId: const MarkerId('uni'),
       position: _uniLocation,
@@ -134,13 +200,12 @@ class _MapPageState extends State<MapPage> {
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
     ));
 
-    // Study spot markers
     for (final spot in _spots) {
       final hue = spot.type == 'library'
           ? BitmapDescriptor.hueGreen
           : spot.type == 'cafe'
-              ? BitmapDescriptor.hueOrange
-              : BitmapDescriptor.hueViolet;
+          ? BitmapDescriptor.hueOrange
+          : BitmapDescriptor.hueViolet;
       markers.add(Marker(
         markerId: MarkerId(spot.id),
         position: LatLng(spot.lat, spot.lng),
@@ -165,13 +230,20 @@ class _MapPageState extends State<MapPage> {
       _showSnack('Enable location to get directions');
       return;
     }
-    setState(() { _loadingRoute = true; _polylines.clear(); _routeInfo = null; });
+    setState(() {
+      _loadingRoute = true;
+      _polylines.clear();
+      _routeInfo = null;
+      _routeDestinationName = 'University';
+    });
 
-    final origin = '${_currentPosition!.latitude},${_currentPosition!.longitude}';
-    final dest = '${_uniLocation.latitude},${_uniLocation.longitude}';
+    final origin =
+        '${_currentPosition!.latitude},${_currentPosition!.longitude}';
+    final dest =
+        '${_uniLocation.latitude},${_uniLocation.longitude}';
     final url = Uri.parse(
       'https://maps.googleapis.com/maps/api/directions/json'
-      '?origin=$origin&destination=$dest&mode=$_travelMode&key=$_apiKey',
+          '?origin=$origin&destination=$dest&mode=$_travelMode&key=$_apiKey',
     );
 
     try {
@@ -184,33 +256,76 @@ class _MapPageState extends State<MapPage> {
         return;
       }
 
-      final route = data['routes'][0];
-      final leg = route['legs'][0];
-      final duration = leg['duration']['text'] as String;
-      final distance = leg['distance']['text'] as String;
-      final encodedPolyline = route['overview_polyline']['points'] as String;
-
-      final points = _decodePolyline(encodedPolyline);
-      setState(() {
-        _routeInfo = '$duration · $distance';
-        _polylines.add(Polyline(
-          polylineId: const PolylineId('route'),
-          points: points,
-          color: const Color(0xFF3B82F6),
-          width: 5,
-        ));
-        _loadingRoute = false;
-      });
-
-      // Fit camera to route
-      final bounds = _boundsFromLatLngList(points);
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 80),
-      );
+      _applyRoute(data, 'University');
     } catch (e) {
       _showSnack('Error getting directions');
       setState(() => _loadingRoute = false);
     }
+  }
+
+  Future<void> _getDirectionsToLatLng(LatLng dest, String destName) async {
+    if (_currentPosition == null) {
+      _showSnack('Enable location to get directions');
+      return;
+    }
+
+    setState(() {
+      _loadingRoute = true;
+      _polylines.clear();
+      _routeInfo = null;
+      _routeDestinationName = destName;
+    });
+
+    final origin =
+        '${_currentPosition!.latitude},${_currentPosition!.longitude}';
+    final destination = '${dest.latitude},${dest.longitude}';
+    final url = Uri.parse(
+      'https://maps.googleapis.com/maps/api/directions/json'
+          '?origin=$origin&destination=$destination&mode=$_travelMode&key=$_apiKey',
+    );
+
+    try {
+      final response = await http.get(url);
+      final data = jsonDecode(response.body);
+
+      if (data['status'] != 'OK') {
+        _showSnack('Could not get directions to $destName');
+        setState(() => _loadingRoute = false);
+        return;
+      }
+
+      _applyRoute(data, destName);
+    } catch (e) {
+      _showSnack('Error getting directions');
+      setState(() => _loadingRoute = false);
+    }
+  }
+
+  void _applyRoute(Map<String, dynamic> data, String destName) {
+    final route = data['routes'][0];
+    final leg = route['legs'][0];
+    final duration = leg['duration']['text'] as String;
+    final distance = leg['distance']['text'] as String;
+    final encodedPolyline =
+    route['overview_polyline']['points'] as String;
+
+    final points = _decodePolyline(encodedPolyline);
+    setState(() {
+      _routeInfo = '$duration · $distance';
+      _routeDestinationName = destName;
+      _polylines.add(Polyline(
+        polylineId: const PolylineId('route'),
+        points: points,
+        color: const Color(0xFF3B82F6),
+        width: 5,
+      ));
+      _loadingRoute = false;
+    });
+
+    final bounds = _boundsFromLatLngList(points);
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 80),
+    );
   }
 
   List<LatLng> _decodePolyline(String encoded) {
@@ -226,7 +341,8 @@ class _MapPageState extends State<MapPage> {
       } while (b >= 0x20);
       final dLat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
       lat += dLat;
-      shift = 0; result = 0;
+      shift = 0;
+      result = 0;
       do {
         b = encoded.codeUnitAt(index++) - 63;
         result |= (b & 0x1F) << shift;
@@ -272,31 +388,45 @@ class _MapPageState extends State<MapPage> {
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModal) => Padding(
-          padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          padding: EdgeInsets.fromLTRB(
+              24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(color: const Color(0xFF334155), borderRadius: BorderRadius.circular(2)),
-              )),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: const Color(0xFF334155),
+                      borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
               const SizedBox(height: 16),
-              const Text('Pin Study Spot', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Pin Study Spot',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               _textField(nameCtrl, 'Name', 'e.g. Quiet corner, Library level 3'),
               const SizedBox(height: 12),
-              _textField(notesCtrl, 'Notes (optional)', 'WiFi, power outlets, noise level...'),
+              _textField(notesCtrl, 'Notes (optional)',
+                  'WiFi, power outlets, noise level...'),
               const SizedBox(height: 16),
-              // Type selector
               Row(children: [
-                _typeChip('Custom', 'custom', type, (v) => setModal(() => type = v), const Color(0xFF8B5CF6)),
+                _typeChip('Custom', 'custom', type,
+                        (v) => setModal(() => type = v), const Color(0xFF8B5CF6)),
                 const SizedBox(width: 8),
-                _typeChip('Library', 'library', type, (v) => setModal(() => type = v), const Color(0xFF22C55E)),
+                _typeChip('Library', 'library', type,
+                        (v) => setModal(() => type = v), const Color(0xFF22C55E)),
                 const SizedBox(width: 8),
-                _typeChip('Café', 'cafe', type, (v) => setModal(() => type = v), const Color(0xFFF97316)),
+                _typeChip('Café', 'cafe', type,
+                        (v) => setModal(() => type = v), const Color(0xFFF97316)),
                 const SizedBox(width: 8),
-                _typeChip('Campus', 'campus', type, (v) => setModal(() => type = v), const Color(0xFF3B82F6)),
+                _typeChip('Campus', 'campus', type,
+                        (v) => setModal(() => type = v), const Color(0xFF3B82F6)),
               ]),
               const SizedBox(height: 20),
               SizedBox(
@@ -321,7 +451,8 @@ class _MapPageState extends State<MapPage> {
                     backgroundColor: const Color(0xFF3B82F6),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Save Spot', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('Save Spot',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -345,14 +476,21 @@ class _MapPageState extends State<MapPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Icon(_spotIcon(spot.type), color: _spotColor(spot.type), size: 24),
+              Icon(_spotIcon(spot.type),
+                  color: _spotColor(spot.type), size: 24),
               const SizedBox(width: 10),
-              Expanded(child: Text(spot.name,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
+              Expanded(
+                  child: Text(spot.name,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold))),
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+                icon: const Icon(Icons.delete_outline,
+                    color: Color(0xFFEF4444)),
                 onPressed: () async {
-                  setState(() => _spots.removeWhere((s) => s.id == spot.id));
+                  setState(() =>
+                      _spots.removeWhere((s) => s.id == spot.id));
                   await _saveSpots();
                   _refreshMarkers();
                   if (mounted) Navigator.pop(ctx);
@@ -361,7 +499,9 @@ class _MapPageState extends State<MapPage> {
             ]),
             if (spot.notes.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(spot.notes, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
+              Text(spot.notes,
+                  style: const TextStyle(
+                      color: Color(0xFF94A3B8), fontSize: 14)),
             ],
             const SizedBox(height: 16),
             SizedBox(
@@ -387,35 +527,8 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _getDirectionsToSpot(StudySpot spot) async {
-    if (_currentPosition == null) { _showSnack('Enable location first'); return; }
-    setState(() { _loadingRoute = true; _polylines.clear(); _routeInfo = null; });
-    final origin = '${_currentPosition!.latitude},${_currentPosition!.longitude}';
-    final dest = '${spot.lat},${spot.lng}';
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/directions/json'
-      '?origin=$origin&destination=$dest&mode=$_travelMode&key=$_apiKey',
-    );
-    try {
-      final response = await http.get(url);
-      final data = jsonDecode(response.body);
-      if (data['status'] != 'OK') { _showSnack('No route found'); setState(() => _loadingRoute = false); return; }
-      final leg = data['routes'][0]['legs'][0];
-      final points = _decodePolyline(data['routes'][0]['overview_polyline']['points']);
-      setState(() {
-        _routeInfo = '${leg['duration']['text']} · ${leg['distance']['text']}';
-        _polylines.add(Polyline(
-          polylineId: const PolylineId('spot_route'),
-          points: points,
-          color: const Color(0xFF22C55E),
-          width: 5,
-        ));
-        _loadingRoute = false;
-      });
-      _mapController?.animateCamera(CameraUpdate.newLatLngBounds(_boundsFromLatLngList(points), 80));
-    } catch (_) {
-      _showSnack('Error getting directions');
-      setState(() => _loadingRoute = false);
-    }
+    await _getDirectionsToLatLng(
+        LatLng(spot.lat, spot.lng), spot.name);
   }
 
   // ── Set university location ───────────────────────────────────────────────
@@ -429,31 +542,48 @@ class _MapPageState extends State<MapPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+            24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Container(width: 40, height: 4,
-              decoration: BoxDecoration(color: const Color(0xFF334155), borderRadius: BorderRadius.circular(2)))),
+            Center(
+              child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: const Color(0xFF334155),
+                      borderRadius: BorderRadius.circular(2))),
+            ),
             const SizedBox(height: 16),
-            const Text('Set University Location', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Set University Location',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('Long-press anywhere on the map to drop the uni pin at that location, or type an address below.',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+            const Text(
+                'Long-press anywhere on the map to drop the uni pin, or search below.',
+                style: TextStyle(
+                    color: Color(0xFF94A3B8), fontSize: 13)),
             const SizedBox(height: 16),
-            _textField(_uniSearchController, 'University name or address', 'e.g. University of Manchester'),
+            _textField(_uniSearchController, 'University name or address',
+                'e.g. University of Portsmouth'),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
-                  await _geocodeAndSetUni(_uniSearchController.text.trim());
+                  await _geocodeAndSetUni(
+                      _uniSearchController.text.trim());
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6),
-                  padding: const EdgeInsets.symmetric(vertical: 14)),
-                child: const Text('Search & Set', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    padding: const EdgeInsets.symmetric(vertical: 14)),
+                child: const Text('Search & Set',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -465,15 +595,17 @@ class _MapPageState extends State<MapPage> {
   Future<void> _geocodeAndSetUni(String address) async {
     if (address.isEmpty) return;
     final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$_apiKey');
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$_apiKey');
     try {
       final res = await http.get(url);
       final data = jsonDecode(res.body);
       if (data['status'] == 'OK') {
         final loc = data['results'][0]['geometry']['location'];
-        setState(() => _uniLocation = LatLng(loc['lat'], loc['lng']));
+        setState(() =>
+        _uniLocation = LatLng(loc['lat'], loc['lng']));
         _refreshMarkers();
-        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_uniLocation, 15));
+        _mapController?.animateCamera(
+            CameraUpdate.newLatLngZoom(_uniLocation, 15));
         _showSnack('University location set ✓');
       } else {
         _showSnack('Address not found');
@@ -487,30 +619,40 @@ class _MapPageState extends State<MapPage> {
 
   void _showSnack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: const Color(0xFF1E293B),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg),
+        backgroundColor: const Color(0xFF1E293B),
         behavior: SnackBarBehavior.floating));
   }
 
   IconData _spotIcon(String type) {
     switch (type) {
-      case 'library': return Icons.local_library;
-      case 'cafe': return Icons.local_cafe;
-      case 'campus': return Icons.school;
-      default: return Icons.push_pin;
+      case 'library':
+        return Icons.local_library;
+      case 'cafe':
+        return Icons.local_cafe;
+      case 'campus':
+        return Icons.school;
+      default:
+        return Icons.push_pin;
     }
   }
 
   Color _spotColor(String type) {
     switch (type) {
-      case 'library': return const Color(0xFF22C55E);
-      case 'cafe': return const Color(0xFFF97316);
-      case 'campus': return const Color(0xFF3B82F6);
-      default: return const Color(0xFF8B5CF6);
+      case 'library':
+        return const Color(0xFF22C55E);
+      case 'cafe':
+        return const Color(0xFFF97316);
+      case 'campus':
+        return const Color(0xFF3B82F6);
+      default:
+        return const Color(0xFF8B5CF6);
     }
   }
 
-  Widget _textField(TextEditingController ctrl, String label, String hint) {
+  Widget _textField(
+      TextEditingController ctrl, String label, String hint) {
     return TextField(
       controller: ctrl,
       style: const TextStyle(color: Colors.white),
@@ -519,25 +661,36 @@ class _MapPageState extends State<MapPage> {
         hintText: hint,
         labelStyle: const TextStyle(color: Color(0xFF64748B)),
         hintStyle: const TextStyle(color: Color(0xFF334155)),
-        enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF334155))),
-        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF3B82F6))),
+        enabledBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF334155))),
+        focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF3B82F6))),
       ),
     );
   }
 
-  Widget _typeChip(String label, String value, String current, Function(String) onTap, Color color) {
+  Widget _typeChip(String label, String value, String current,
+      Function(String) onTap, Color color) {
     final active = current == value;
     return GestureDetector(
       onTap: () => onTap(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: active ? color.withOpacity(0.2) : const Color(0xFF1E293B),
+          color: active
+              ? color.withOpacity(0.2)
+              : const Color(0xFF1E293B),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? color : const Color(0xFF334155)),
+          border: Border.all(
+              color: active ? color : const Color(0xFF334155)),
         ),
-        child: Text(label, style: TextStyle(color: active ? color : const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600)),
+        child: Text(label,
+            style: TextStyle(
+                color: active ? color : const Color(0xFF64748B),
+                fontSize: 12,
+                fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -550,13 +703,19 @@ class _MapPageState extends State<MapPage> {
       backgroundColor: const Color(0xFF020617),
       body: Stack(
         children: [
-          // ── Google Map ──────────────────────────────────────────────────
+          // Google Map
           GoogleMap(
             onMapCreated: (c) {
               _mapController = c;
               c.setMapStyle(_darkMapStyle);
               if (_currentPosition != null) {
-                c.animateCamera(CameraUpdate.newLatLngZoom(_currentPosition!, 15));
+                c.animateCamera(
+                    CameraUpdate.newLatLngZoom(_currentPosition!, 15));
+              }
+              // Handle any pending destination that arrived before map was ready
+              if (widget.pendingDestination != null) {
+                _handlePendingDestination(widget.pendingDestination!);
+                widget.onDestinationHandled?.call();
               }
             },
             initialCameraPosition: CameraPosition(
@@ -573,44 +732,58 @@ class _MapPageState extends State<MapPage> {
             compassEnabled: true,
           ),
 
-          // ── Top bar ─────────────────────────────────────────────────────
+          // Top bar
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
-            left: 12, right: 12,
+            left: 12,
+            right: 12,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A).withOpacity(0.95),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFF1E293B)),
               ),
               child: Row(children: [
-                const Icon(Icons.map_rounded, color: Color(0xFF3B82F6), size: 22),
+                const Icon(Icons.map_rounded,
+                    color: Color(0xFF3B82F6), size: 22),
                 const SizedBox(width: 10),
-                const Text('Campus Map', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Campus Map',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
                 const Spacer(),
-                // Set uni button
                 GestureDetector(
                   onTap: _showSetUniDialog,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: const Color(0xFF1E293B),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.school, size: 14, color: Color(0xFF94A3B8)),
-                      SizedBox(width: 4),
-                      Text('Set Uni', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-                    ]),
+                    child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.school,
+                              size: 14, color: Color(0xFF94A3B8)),
+                          SizedBox(width: 4),
+                          Text('Set Uni',
+                              style: TextStyle(
+                                  color: Color(0xFF94A3B8),
+                                  fontSize: 12)),
+                        ]),
                   ),
                 ),
                 const SizedBox(width: 8),
-                // My location button
                 GestureDetector(
                   onTap: () {
                     if (_currentPosition != null) {
-                      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_currentPosition!, 16));
+                      _mapController?.animateCamera(
+                          CameraUpdate.newLatLngZoom(
+                              _currentPosition!, 16));
                     } else {
                       _initLocation();
                     }
@@ -621,54 +794,89 @@ class _MapPageState extends State<MapPage> {
                       color: const Color(0xFF1E293B),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.my_location, size: 18, color: Color(0xFF3B82F6)),
+                    child: const Icon(Icons.my_location,
+                        size: 18, color: Color(0xFF3B82F6)),
                   ),
                 ),
               ]),
             ),
           ),
 
-          // ── Legend / spots count ─────────────────────────────────────────
+          // Legend
           Positioned(
             top: MediaQuery.of(context).padding.top + 68,
             left: 12,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _legendChip(Icons.school, 'University', const Color(0xFF3B82F6)),
+                _legendChip(Icons.school, 'University',
+                    const Color(0xFF3B82F6)),
                 const SizedBox(height: 6),
-                _legendChip(Icons.push_pin, '${_spots.length} study spot${_spots.length == 1 ? '' : 's'}', const Color(0xFF8B5CF6)),
+                _legendChip(
+                    Icons.push_pin,
+                    '${_spots.length} study spot${_spots.length == 1 ? '' : 's'}',
+                    const Color(0xFF8B5CF6)),
               ],
             ),
           ),
 
-          // ── Route info banner ────────────────────────────────────────────
+          // Route info banner — shows destination name
           if (_routeInfo != null)
             Positioned(
               top: MediaQuery.of(context).padding.top + 68,
               right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFF3B82F6),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.directions_walk, color: Colors.white, size: 16),
+                  const Icon(Icons.directions_walk,
+                      color: Colors.white, size: 16),
                   const SizedBox(width: 6),
-                  Text(_routeInfo!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_routeDestinationName != null)
+                        Text(
+                          _routeDestinationName!,
+                          style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10),
+                        ),
+                      Text(_routeInfo!,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13)),
+                    ],
+                  ),
                   const SizedBox(width: 6),
                   GestureDetector(
-                    onTap: () => setState(() { _polylines.clear(); _routeInfo = null; }),
-                    child: const Icon(Icons.close, color: Colors.white70, size: 16),
+                    onTap: () => setState(() {
+                      _polylines.clear();
+                      _routeInfo = null;
+                      _routeDestinationName = null;
+                      // Remove destination markers
+                      _markers.removeWhere((m) =>
+                          m.markerId.value.startsWith('destination_'));
+                      _refreshMarkers();
+                    }),
+                    child: const Icon(Icons.close,
+                        color: Colors.white70, size: 16),
                   ),
                 ]),
               ),
             ),
 
-          // ── Bottom panel ─────────────────────────────────────────────────
+          // Bottom panel
           Positioned(
-            bottom: 16, left: 12, right: 12,
+            bottom: 16,
+            left: 12,
+            right: 12,
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -683,34 +891,45 @@ class _MapPageState extends State<MapPage> {
                   Row(children: [
                     _modeChip(Icons.directions_walk, 'Walk', 'walking'),
                     const SizedBox(width: 8),
-                    _modeChip(Icons.directions_transit, 'Transit', 'transit'),
+                    _modeChip(
+                        Icons.directions_transit, 'Transit', 'transit'),
                     const SizedBox(width: 8),
-                    _modeChip(Icons.directions_bike, 'Cycle', 'bicycling'),
+                    _modeChip(
+                        Icons.directions_bike, 'Cycle', 'bicycling'),
                   ]),
                   const SizedBox(height: 12),
-                  // Directions button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: _loadingRoute ? null : _getDirections,
+                      onPressed:
+                      _loadingRoute ? null : _getDirections,
                       icon: _loadingRoute
-                          ? const SizedBox(width: 18, height: 18,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
                           : const Icon(Icons.directions),
-                      label: Text(_loadingRoute ? 'Getting route...' : 'Directions to University'),
+                      label: Text(_loadingRoute
+                          ? 'Getting route...'
+                          : 'Directions to University'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B82F6),
-                        disabledBackgroundColor: const Color(0xFF1E293B),
-                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        disabledBackgroundColor:
+                        const Color(0xFF1E293B),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 13),
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Row(children: [
-                    const Icon(Icons.touch_app, size: 12, color: Color(0xFF475569)),
+                    const Icon(Icons.touch_app,
+                        size: 12, color: Color(0xFF475569)),
                     const SizedBox(width: 4),
-                    Text('Long-press map to pin a study spot',
-                      style: const TextStyle(color: Color(0xFF475569), fontSize: 11)),
+                    const Text('Long-press map to pin a study spot',
+                        style: TextStyle(
+                            color: Color(0xFF475569), fontSize: 11)),
                   ]),
                 ],
               ),
@@ -725,21 +944,38 @@ class _MapPageState extends State<MapPage> {
     final active = _travelMode == mode;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() { _travelMode = mode; _polylines.clear(); _routeInfo = null; }),
+        onTap: () => setState(() {
+          _travelMode = mode;
+          _polylines.clear();
+          _routeInfo = null;
+        }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: active ? const Color(0xFF3B82F6).withOpacity(0.2) : const Color(0xFF1E293B),
+            color: active
+                ? const Color(0xFF3B82F6).withOpacity(0.2)
+                : const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: active ? const Color(0xFF3B82F6) : const Color(0xFF334155)),
+            border: Border.all(
+                color: active
+                    ? const Color(0xFF3B82F6)
+                    : const Color(0xFF334155)),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, size: 18, color: active ? const Color(0xFF3B82F6) : const Color(0xFF64748B)),
+            Icon(icon,
+                size: 18,
+                color: active
+                    ? const Color(0xFF3B82F6)
+                    : const Color(0xFF64748B)),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(
-              color: active ? const Color(0xFF3B82F6) : const Color(0xFF64748B),
-              fontSize: 10, fontWeight: FontWeight.w600)),
+            Text(label,
+                style: TextStyle(
+                    color: active
+                        ? const Color(0xFF3B82F6)
+                        : const Color(0xFF64748B),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600)),
           ]),
         ),
       ),
@@ -748,7 +984,8 @@ class _MapPageState extends State<MapPage> {
 
   Widget _legendChip(IconData icon, String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding:
+      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A).withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
@@ -757,13 +994,17 @@ class _MapPageState extends State<MapPage> {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 5),
-        Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600)),
       ]),
     );
   }
 }
 
-// ── Dark map style JSON ───────────────────────────────────────────────────────
+// ── Dark map style ────────────────────────────────────────────────────────────
 const String _darkMapStyle = '''
 [
   {"elementType":"geometry","stylers":[{"color":"#0f172a"}]},
@@ -781,4 +1022,3 @@ const String _darkMapStyle = '''
   {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#0f172a"}]}
 ]
 ''';
-

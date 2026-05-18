@@ -4,7 +4,11 @@ import '../controllers/timetable_controller.dart';
 import '../models/event.dart';
 import '../models/free_time_slot.dart';
 import '../models/study_session.dart';
+import '../models/gap_recommendation.dart';
+import '../services/notification_service.dart';
 import '../widgets/next_event_card.dart';
+import '../widgets/gap_recommendations_card.dart';
+import '../widgets/session_completion_dialog.dart';
 import '../widgets/study_session_dialog.dart';
 import '../widgets/event_location_dialog.dart';
 
@@ -17,13 +21,16 @@ class TimetablePage extends StatefulWidget {
 
 class _TimetablePageState extends State<TimetablePage> {
   final TimetableController _controller = TimetableController();
+  final NotificationService _notifications = NotificationService();
+
   late DateTime _currentWeekStart;
   final ScrollController _scrollController = ScrollController();
-  
-  // Time range for display
+
   late int _startHour;
   late int _endHour;
   final double _hourHeight = 70;
+
+  List<GapRecommendation> _todaysGaps = [];
 
   @override
   void initState() {
@@ -31,6 +38,7 @@ class _TimetablePageState extends State<TimetablePage> {
     _currentWeekStart = _getWeekStart(DateTime.now());
     _updateTimeRange();
     _controller.addListener(_onControllerUpdate);
+    _loadTodaysGaps();
   }
 
   @override
@@ -45,6 +53,7 @@ class _TimetablePageState extends State<TimetablePage> {
       setState(() {
         _updateTimeRange();
       });
+      _loadTodaysGaps();
     }
   }
 
@@ -54,8 +63,19 @@ class _TimetablePageState extends State<TimetablePage> {
     _endHour = range[1];
   }
 
+  Future<void> _loadTodaysGaps() async {
+    final today = DateTime.now();
+    final gaps = _controller.getGapRecommendations(today);
+    if (mounted) {
+      setState(() {
+        _todaysGaps = gaps;
+      });
+    }
+    // Schedule a notification at the start of each gap
+    await _notifications.scheduleGapNotifications(gaps);
+  }
+
   DateTime _getWeekStart(DateTime date) {
-    // Get Monday of the week
     final weekday = date.weekday;
     return DateTime(date.year, date.month, date.day - (weekday - 1));
   }
@@ -82,8 +102,8 @@ class _TimetablePageState extends State<TimetablePage> {
     final today = DateTime.now();
     final thisWeekStart = _getWeekStart(today);
     return _currentWeekStart.year == thisWeekStart.year &&
-           _currentWeekStart.month == thisWeekStart.month &&
-           _currentWeekStart.day == thisWeekStart.day;
+        _currentWeekStart.month == thisWeekStart.month &&
+        _currentWeekStart.day == thisWeekStart.day;
   }
 
   @override
@@ -93,10 +113,10 @@ class _TimetablePageState extends State<TimetablePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header with week navigation
+            // Header
             _buildHeader(),
-            
-            // Next Event Card
+
+            // Scrollable top section: next event card + gap recommendations
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: NextEventCard(
@@ -104,17 +124,24 @@ class _TimetablePageState extends State<TimetablePage> {
                 onLocationTap: (event) => _showLocationDialog(event),
               ),
             ),
-            
-            const SizedBox(height: 16),
-            
+
+            // Gap recommendations card — only shown when gaps exist
+            if (_todaysGaps.isNotEmpty)
+              GapRecommendationsCard(
+                gaps: _todaysGaps,
+                hasAnalyticsData: _controller.hasAnalyticsData,
+              ),
+
+            const SizedBox(height: 8),
+
             // Week navigation bar
             _buildWeekNavigation(),
-            
+
             const SizedBox(height: 8),
-            
+
             // Day headers
             _buildDayHeaders(),
-            
+
             // Timetable grid
             Expanded(
               child: _buildTimetableGrid(),
@@ -158,7 +185,7 @@ class _TimetablePageState extends State<TimetablePage> {
   Widget _buildWeekNavigation() {
     final weekEnd = _currentWeekStart.add(const Duration(days: 6));
     final dateFormat = DateFormat('MMM d');
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -190,21 +217,23 @@ class _TimetablePageState extends State<TimetablePage> {
   Widget _buildDayHeaders() {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final today = DateTime.now();
-    
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 70), // Account for time column
+      padding: const EdgeInsets.symmetric(horizontal: 70),
       child: Row(
         children: List.generate(7, (index) {
           final day = _currentWeekStart.add(Duration(days: index));
           final isToday = day.year == today.year &&
-                         day.month == today.month &&
-                         day.day == today.day;
-          
+              day.month == today.month &&
+              day.day == today.day;
+
           return Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: isToday ? const Color(0xFF3B82F6).withOpacity(0.2) : Colors.transparent,
+                color: isToday
+                    ? const Color(0xFF3B82F6).withOpacity(0.2)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -214,7 +243,9 @@ class _TimetablePageState extends State<TimetablePage> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isToday ? const Color(0xFF3B82F6) : const Color(0xFF94A3B8),
+                      color: isToday
+                          ? const Color(0xFF3B82F6)
+                          : const Color(0xFF94A3B8),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -223,7 +254,9 @@ class _TimetablePageState extends State<TimetablePage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isToday ? const Color(0xFF3B82F6) : Colors.white,
+                      color: isToday
+                          ? const Color(0xFF3B82F6)
+                          : Colors.white,
                     ),
                   ),
                 ],
@@ -237,21 +270,19 @@ class _TimetablePageState extends State<TimetablePage> {
 
   Widget _buildTimetableGrid() {
     final totalHours = _endHour - _startHour;
-    
+
     return SingleChildScrollView(
       controller: _scrollController,
       child: SizedBox(
         height: totalHours * _hourHeight + 20,
         child: Row(
           children: [
-            // Time column
             _buildTimeColumn(),
-            
-            // Day columns
             Expanded(
               child: Row(
                 children: List.generate(7, (dayIndex) {
-                  final day = _currentWeekStart.add(Duration(days: dayIndex));
+                  final day =
+                  _currentWeekStart.add(Duration(days: dayIndex));
                   return Expanded(
                     child: _buildDayColumn(day),
                   );
@@ -269,10 +300,10 @@ class _TimetablePageState extends State<TimetablePage> {
 
     return SizedBox(
       width: 70,
-      child: SingleChildScrollView( // Add this
-        physics: const NeverScrollableScrollPhysics(), // Disable scroll since parent scrolls
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Add this
+          mainAxisSize: MainAxisSize.min,
           children: List.generate(totalHours, (index) {
             final hour = _startHour + index;
             return Container(
@@ -298,12 +329,11 @@ class _TimetablePageState extends State<TimetablePage> {
     final freeSlots = _controller.findFreeTimeSlots(day);
     final today = DateTime.now();
     final isToday = day.year == today.year &&
-                    day.month == today.month &&
-                    day.day == today.day;
+        day.month == today.month &&
+        day.day == today.day;
 
     return Stack(
       children: [
-        // Hour grid lines
         Column(
           children: List.generate(_endHour - _startHour, (index) {
             return Container(
@@ -319,17 +349,9 @@ class _TimetablePageState extends State<TimetablePage> {
             );
           }),
         ),
-        
-        // Current time indicator
         if (isToday) _buildCurrentTimeIndicator(),
-        
-        // Free time slots (tappable)
         ...freeSlots.map((slot) => _buildFreeTimeSlot(day, slot)),
-        
-        // Calendar events
         ...events.map((event) => _buildEventBlock(day, event)),
-        
-        // Study sessions
         ...sessions.map((session) => _buildStudySessionBlock(day, session)),
       ],
     );
@@ -338,13 +360,13 @@ class _TimetablePageState extends State<TimetablePage> {
   Widget _buildCurrentTimeIndicator() {
     final now = DateTime.now();
     final currentHour = now.hour + now.minute / 60;
-    
+
     if (currentHour < _startHour || currentHour > _endHour) {
       return const SizedBox.shrink();
     }
-    
+
     final topOffset = (currentHour - _startHour) * _hourHeight;
-    
+
     return Positioned(
       top: topOffset,
       left: 0,
@@ -373,7 +395,7 @@ class _TimetablePageState extends State<TimetablePage> {
     final endHour = slot.endTime.hour + slot.endTime.minute / 60;
     final top = (startHour - _startHour) * _hourHeight;
     final height = (endHour - startHour) * _hourHeight;
-    
+
     return Positioned(
       top: top,
       left: 2,
@@ -422,10 +444,10 @@ class _TimetablePageState extends State<TimetablePage> {
     final endHour = event.endTime.hour + event.endTime.minute / 60;
     final top = (startHour - _startHour) * _hourHeight;
     final height = (endHour - startHour) * _hourHeight;
-    
+
     final color = _controller.getModuleColor(event.moduleCode);
     final isPast = event.isPast;
-    
+
     return Positioned(
       top: top,
       left: 2,
@@ -448,20 +470,26 @@ class _TimetablePageState extends State<TimetablePage> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: isPast ? Colors.white.withOpacity(0.5) : Colors.white,
-                  decoration: isPast ? TextDecoration.lineThrough : null,
+                  color: isPast
+                      ? Colors.white.withOpacity(0.5)
+                      : Colors.white,
+                  decoration:
+                  isPast ? TextDecoration.lineThrough : null,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (event.location != null && event.location!.isNotEmpty) ...[
+              if (event.location != null &&
+                  event.location!.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Row(
                   children: [
                     Icon(
                       Icons.location_on,
                       size: 8,
-                      color: isPast ? Colors.white.withOpacity(0.4) : Colors.white.withOpacity(0.8),
+                      color: isPast
+                          ? Colors.white.withOpacity(0.4)
+                          : Colors.white.withOpacity(0.8),
                     ),
                     const SizedBox(width: 2),
                     Expanded(
@@ -469,7 +497,9 @@ class _TimetablePageState extends State<TimetablePage> {
                         event.location!,
                         style: TextStyle(
                           fontSize: 8,
-                          color: isPast ? Colors.white.withOpacity(0.4) : Colors.white.withOpacity(0.8),
+                          color: isPast
+                              ? Colors.white.withOpacity(0.4)
+                              : Colors.white.withOpacity(0.8),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -486,14 +516,15 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildStudySessionBlock(DateTime day, StudySession session) {
-    final startHour = session.startTime.hour + session.startTime.minute / 60;
+    final startHour =
+        session.startTime.hour + session.startTime.minute / 60;
     final endHour = session.endTime.hour + session.endTime.minute / 60;
     final top = (startHour - _startHour) * _hourHeight;
     final height = (endHour - startHour) * _hourHeight;
-    
+
     final color = session.type.color;
     final isPast = session.isPast;
-    
+
     return Positioned(
       top: top,
       left: 2,
@@ -513,11 +544,7 @@ class _TimetablePageState extends State<TimetablePage> {
             ),
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 12),
-            child: const Icon(
-              Icons.delete,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: const Icon(Icons.delete, color: Colors.white, size: 20),
           ),
           confirmDismiss: (_) => _confirmDelete(session),
           onDismissed: (_) => _deleteSession(session),
@@ -526,7 +553,8 @@ class _TimetablePageState extends State<TimetablePage> {
             margin: const EdgeInsets.all(2),
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: isPast ? color.withOpacity(0.3) : color.withOpacity(0.8),
+              color:
+              isPast ? color.withOpacity(0.3) : color.withOpacity(0.8),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: isPast ? color.withOpacity(0.3) : color,
@@ -543,7 +571,9 @@ class _TimetablePageState extends State<TimetablePage> {
                         Icon(
                           session.type.icon,
                           size: 12,
-                          color: isPast ? Colors.white.withOpacity(0.5) : Colors.white,
+                          color: isPast
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.white,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -552,8 +582,12 @@ class _TimetablePageState extends State<TimetablePage> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: isPast ? Colors.white.withOpacity(0.5) : Colors.white,
-                              decoration: session.isCompleted ? TextDecoration.lineThrough : null,
+                              color: isPast
+                                  ? Colors.white.withOpacity(0.5)
+                                  : Colors.white,
+                              decoration: session.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -566,7 +600,9 @@ class _TimetablePageState extends State<TimetablePage> {
                       '${session.durationMinutes} min',
                       style: TextStyle(
                         fontSize: 8,
-                        color: isPast ? Colors.white.withOpacity(0.4) : Colors.white.withOpacity(0.8),
+                        color: isPast
+                            ? Colors.white.withOpacity(0.4)
+                            : Colors.white.withOpacity(0.8),
                       ),
                     ),
                   ],
@@ -601,7 +637,8 @@ class _TimetablePageState extends State<TimetablePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Session'),
-        content: Text('Are you sure you want to delete "${session.title}"?'),
+        content:
+        Text('Are you sure you want to delete "${session.title}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -638,20 +675,26 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Future<void> _toggleSessionComplete(StudySession session) async {
-    await _controller.toggleSessionCompletion(session.id);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            session.isCompleted 
-              ? '"${session.title}" marked incomplete'
-              : '"${session.title}" completed!',
-          ),
-          backgroundColor: session.isCompleted 
-            ? const Color(0xFF64748B)
-            : const Color(0xFF10B981),
+    if (!session.isCompleted) {
+      showDialog(
+        context: context,
+        builder: (context) => SessionCompletionDialog(
+          session: session,
+          onComplete: (updatedSession) async {
+            await _controller.updateStudySession(updatedSession);
+          },
         ),
       );
+    } else {
+      await _controller.toggleSessionCompletion(session.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${session.title}" marked incomplete'),
+            backgroundColor: const Color(0xFF64748B),
+          ),
+        );
+      }
     }
   }
 
@@ -670,7 +713,7 @@ class _TimetablePageState extends State<TimetablePage> {
     showDialog(
       context: context,
       builder: (context) => const StudySessionDialog(
-        initialStartTime: null, // Will use current time
+        initialStartTime: null,
       ),
     );
   }
@@ -678,9 +721,7 @@ class _TimetablePageState extends State<TimetablePage> {
   void _showEditSessionDialog(StudySession session) {
     showDialog(
       context: context,
-      builder: (context) => StudySessionDialog(
-        session: session,
-      ),
+      builder: (context) => StudySessionDialog(session: session),
     );
   }
 

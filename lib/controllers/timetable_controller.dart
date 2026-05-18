@@ -5,7 +5,12 @@ import 'package:intl/intl.dart';
 import '../models/event.dart';
 import '../models/study_session.dart';
 import '../models/free_time_slot.dart';
+import '../models/deadline.dart';
+import '../models/gap_recommendation.dart';
 import '../services/storage_service.dart';
+import '../services/notification_service.dart';
+import '../services/analytics_service.dart';
+import '../services/sm2_service.dart';
 
 // Helper class for time blocks
 class _TimeBlock {
@@ -20,11 +25,9 @@ class TimetableController extends ChangeNotifier {
   TimetableController._internal();
 
   final StorageService _storage = StorageService();
+  final NotificationService _notifications = NotificationService();
 
-  // Internal storage using Maps (proven working format)
   List<Map<String, dynamic>> _instances = [];
-
-  // Cached CalendarEvents for UI compatibility
   List<CalendarEvent> _events = [];
 
   bool _initialized = false;
@@ -34,7 +37,6 @@ class TimetableController extends ChangeNotifier {
     if (_initialized) return;
     await _storage.initialize();
 
-    // Load saved events and convert to both formats
     final savedEvents = _storage.loadCalendarEvents();
     if (savedEvents.isNotEmpty) {
       _events = savedEvents;
@@ -46,7 +48,6 @@ class TimetableController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Load from ICS file content
   Future<void> loadFromIcs(String content) async {
     debugPrint('Loading ICS content (${content.length} chars)...');
 
@@ -83,7 +84,6 @@ class TimetableController extends ChangeNotifier {
         }
       }
 
-      // Sort by start time
       allInstances.sort((a, b) {
         final da = _asDateTime(a['dtstart'])!;
         final db = _asDateTime(b['dtstart'])!;
@@ -96,12 +96,10 @@ class TimetableController extends ChangeNotifier {
         throw Exception('No valid events found in ICS file');
       }
 
-      // Convert to CalendarEvents for storage and UI
       final calendarEvents = allInstances.map((m) => _mapToEvent(m)).toList();
       await _storage.saveCalendarEvents(calendarEvents);
       await _storage.saveIcsContent(content);
 
-      // Update both internal representations
       _instances = allInstances;
       _events = calendarEvents;
 
@@ -113,6 +111,12 @@ class TimetableController extends ChangeNotifier {
       debugPrint('Stack trace: $stackTrace');
       rethrow;
     }
+
+    try {
+      await _notifications.scheduleClassReminders(_events);
+    } catch (e) {
+      debugPrint('Failed to schedule class reminders: $e');
+    }
   }
 
   Future<void> refresh() async {
@@ -123,15 +127,15 @@ class TimetableController extends ChangeNotifier {
   }
 
   Future<void> clearAllData() async {
+    try { await _notifications.cancelAll(); } catch (_) {}
     await _storage.clearAllData();
     _instances = [];
     _events = [];
     notifyListeners();
   }
 
-  // ==================== EVENT METHODS (for UI compatibility) ====================
+  // ==================== EVENT METHODS ====================
 
-  /// Get next upcoming event - RETURNS CalendarEvent for UI compatibility
   CalendarEvent? getNextEvent() {
     final now = DateTime.now();
     final upcoming = _events.where((e) => e.endTime.isAfter(now)).toList()
@@ -139,7 +143,6 @@ class TimetableController extends ChangeNotifier {
     return upcoming.isNotEmpty ? upcoming.first : null;
   }
 
-  /// Get events for a specific day - RETURNS List<CalendarEvent>
   List<CalendarEvent> getEventsForDay(DateTime day) {
     return _events.where((event) {
       return event.startTime.year == day.year &&
@@ -149,7 +152,6 @@ class TimetableController extends ChangeNotifier {
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
-  /// Get events for a date range
   List<CalendarEvent> getEventsForRange(DateTime start, DateTime end) {
     return _events.where((event) {
       return event.startTime.isBefore(end) && event.endTime.isAfter(start);
@@ -157,7 +159,6 @@ class TimetableController extends ChangeNotifier {
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
-  /// Get events for a specific week
   List<CalendarEvent> getEventsForWeek(DateTime weekStart) {
     final weekEnd = weekStart.add(const Duration(days: 7));
     return getEventsForRange(weekStart, weekEnd);
@@ -179,15 +180,23 @@ class TimetableController extends ChangeNotifier {
 
   Future<void> addStudySession(StudySession session) async {
     await _storage.addStudySession(session);
+    try { await _notifications.scheduleSessionReminder(session); } catch (_) {}
     notifyListeners();
   }
 
   Future<void> updateStudySession(StudySession session) async {
     await _storage.updateStudySession(session);
+    try {
+      await _notifications.cancelSessionReminder(session.id);
+      if (!session.isCompleted) {
+        await _notifications.scheduleSessionReminder(session);
+      }
+    } catch (_) {}
     notifyListeners();
   }
 
   Future<void> deleteStudySession(String id) async {
+    try { await _notifications.cancelSessionReminder(id); } catch (_) {}
     await _storage.deleteStudySession(id);
     notifyListeners();
   }
@@ -197,10 +206,98 @@ class TimetableController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ==================== DEADLINE METHODS ====================
+
+  List<Deadline> getAllDeadlines() {
+    return _storage.loadDeadlines()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  List<Deadline> getUpcomingDeadlines() {
+    return _storage.getUpcomingDeadlines();
+  }
+
+  List<Deadline> getOverdueDeadlines() {
+    return _storage.getOverdueDeadlines();
+  }
+
+  List<Deadline> getDeadlinesForModule(String moduleCode) {
+    return _storage.getDeadlinesForModule(moduleCode);
+  }
+
+  List<Deadline> getDeadlinesDueSoon({int days = 7}) {
+    final now = DateTime.now();
+    final cutoff = now.add(Duration(days: days));
+    return _storage.loadDeadlines()
+        .where((d) =>
+    d.status != DeadlineStatus.completed &&
+        d.dueDate.isBefore(cutoff))
+        .toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  Future<void> addDeadline(Deadline deadline) async {
+    await _storage.addDeadline(deadline);
+    try { await _notifications.scheduleDeadlineWarnings(deadline); } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> updateDeadline(Deadline deadline) async {
+    await _storage.updateDeadline(deadline);
+    try {
+      await _notifications.cancelDeadlineWarnings(deadline.id);
+      if (deadline.status != DeadlineStatus.completed) {
+        await _notifications.scheduleDeadlineWarnings(deadline);
+      }
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> deleteDeadline(String id) async {
+    try { await _notifications.cancelDeadlineWarnings(id); } catch (_) {}
+    await _storage.deleteDeadline(id);
+    notifyListeners();
+  }
+
+  Future<void> toggleDeadlineStatus(String id) async {
+    final deadlines = _storage.loadDeadlines();
+    final index = deadlines.indexWhere((d) => d.id == id);
+    if (index != -1) {
+      final d = deadlines[index];
+      final newStatus = d.status == DeadlineStatus.completed
+          ? DeadlineStatus.todo
+          : DeadlineStatus.completed;
+      deadlines[index] = d.copyWith(
+        status: newStatus,
+        completedAt: newStatus == DeadlineStatus.completed
+            ? DateTime.now()
+            : null,
+      );
+      await _storage.saveDeadlines(deadlines);
+
+      try {
+        if (newStatus == DeadlineStatus.completed) {
+          await _notifications.cancelDeadlineWarnings(id);
+        } else {
+          await _notifications.scheduleDeadlineWarnings(deadlines[index]);
+        }
+      } catch (_) {}
+
+      notifyListeners();
+    }
+  }
+
+  double getLoggedHoursForDeadline(String deadlineId) {
+    final sessions = _storage.loadStudySessions();
+    final linked = sessions.where((s) =>
+    s.isCompleted && s.deadlineId == deadlineId);
+    final totalMinutes = linked.fold<int>(
+        0, (sum, s) => sum + (s.actualDurationMinutes ?? s.durationMinutes));
+    return totalMinutes / 60.0;
+  }
 
   // ==================== FREE TIME SLOTS ====================
 
-  /// Find free time slots between events - RETURNS List<FreeTimeSlot>
   List<FreeTimeSlot> findFreeTimeSlots(
       DateTime day, {
         TimeOfDay? dayStart,
@@ -208,15 +305,12 @@ class TimetableController extends ChangeNotifier {
       }) {
     final slots = <FreeTimeSlot>[];
 
-    // Full 24-hour range
-    final startOfDay = DateTime(day.year, day.month, day.day, 0, 0); // Midnight
-    final endOfDay = DateTime(day.year, day.month, day.day, 23, 59); // 11:59 PM
+    final startOfDay = DateTime(day.year, day.month, day.day, 0, 0);
+    final endOfDay = DateTime(day.year, day.month, day.day, 23, 59);
 
-    // Get all events and study sessions for the day
     final dayEvents = getEventsForDay(day);
     final daySessions = getStudySessionsForDay(day);
 
-    // Combine and sort all blocked times
     final blockedTimes = <_TimeBlock>[];
 
     for (final event in dayEvents) {
@@ -227,10 +321,8 @@ class TimetableController extends ChangeNotifier {
       blockedTimes.add(_TimeBlock(session.startTime, session.endTime));
     }
 
-    // Sort by start time
     blockedTimes.sort((a, b) => a.start.compareTo(b.start));
 
-    // Merge overlapping blocks
     final mergedBlocks = <_TimeBlock>[];
     for (final block in blockedTimes) {
       if (mergedBlocks.isEmpty) {
@@ -238,7 +330,6 @@ class TimetableController extends ChangeNotifier {
       } else {
         final last = mergedBlocks.last;
         if (block.start.isBefore(last.end) || block.start.isAtSameMomentAs(last.end)) {
-          // Merge overlapping or adjacent blocks
           mergedBlocks[mergedBlocks.length - 1] = _TimeBlock(
             last.start,
             block.end.isAfter(last.end) ? block.end : last.end,
@@ -249,13 +340,12 @@ class TimetableController extends ChangeNotifier {
       }
     }
 
-    // Find gaps between blocked times
     var currentTime = startOfDay;
 
     for (final block in mergedBlocks) {
       if (block.start.isAfter(currentTime)) {
         final gap = block.start.difference(currentTime);
-        if (gap.inMinutes >= 30) { // Minimum 30 min slot
+        if (gap.inMinutes >= 30) {
           slots.add(FreeTimeSlot(
             startTime: currentTime,
             endTime: block.start,
@@ -264,13 +354,11 @@ class TimetableController extends ChangeNotifier {
         }
       }
 
-      // Move current time to end of this block
       if (block.end.isAfter(currentTime)) {
         currentTime = block.end;
       }
     }
 
-    // Add final gap from last block to end of day
     if (currentTime.isBefore(endOfDay)) {
       final gap = endOfDay.difference(currentTime);
       if (gap.inMinutes >= 30) {
@@ -282,21 +370,136 @@ class TimetableController extends ChangeNotifier {
       }
     }
 
-    // If no blocked times at all, entire day is free
-    if (mergedBlocks.isEmpty) {
-      final fullDayGap = endOfDay.difference(startOfDay);
-      if (fullDayGap.inMinutes >= 30) {
-        slots.add(FreeTimeSlot(
-          startTime: startOfDay,
-          endTime: endOfDay,
-          day: day,
-        ));
-      }
-    }
 
     return slots;
   }
 
+  // ==================== GAP RECOMMENDATIONS ====================
+
+  /// Whether enough session data exists for personalised recommendations.
+  bool get hasAnalyticsData {
+    final analyticsService = AnalyticsService();
+    final insights = analyticsService.getInsights();
+    return insights.averageEfficiency != null;
+  }
+
+  /// Generate smart gap recommendations for a given day.
+  /// Cross-references free slots with optimal study hours,
+  /// upcoming deadlines, and SM2 nodes due for review.
+  List<GapRecommendation> getGapRecommendations(DateTime day) {
+    final freeSlots = findFreeTimeSlots(day);
+    if (freeSlots.isEmpty) return [];
+
+    final analyticsService = AnalyticsService();
+    final sm2Service = Sm2Service();
+    final insights = analyticsService.getInsights();
+    final hasData = insights.averageEfficiency != null;
+    final optimalHour = insights.bestTimeToStudy?.hour;
+
+    // Get upcoming deadlines sorted by urgency
+    final urgentDeadlines = getDeadlinesDueSoon(days: 14);
+
+    // Count SM2 nodes due for review across all maps
+    final allMaps = _storage.loadKnowledgeMaps();
+    int totalDueNodes = 0;
+    for (final map in allMaps) {
+      final graph = _storage.getKnowledgeGraphData(map.id);
+      if (graph != null) {
+        totalDueNodes += graph.nodes
+            .where((n) => sm2Service.isDue(n))
+            .length;
+      }
+    }
+
+    final recommendations = <GapRecommendation>[];
+
+    for (final slot in freeSlots) {
+      final slotHour = slot.startTime.hour;
+      final durationMins = slot.duration.inMinutes;
+
+      // Determine gap quality
+      GapQuality quality;
+      if (!hasData) {
+        // No analytics yet — use general time-of-day heuristics
+        if (slotHour >= 9 && slotHour <= 12) {
+          quality = GapQuality.good;
+        } else if (slotHour >= 13 && slotHour <= 17) {
+          quality = GapQuality.good;
+        } else {
+          quality = GapQuality.light;
+        }
+      } else {
+        // Personalised: compare slot hour to user's optimal hour
+        final hourDiff = (slotHour - optimalHour!).abs();
+        if (hourDiff <= 1) {
+          quality = GapQuality.peak;
+        } else if (hourDiff <= 3) {
+          quality = GapQuality.good;
+        } else {
+          quality = GapQuality.light;
+        }
+      }
+
+      // Build contextual suggestion
+      String suggestion;
+      String? relatedDeadline;
+
+      if (urgentDeadlines.isNotEmpty) {
+        final soonest = urgentDeadlines.first;
+        relatedDeadline = soonest.title;
+
+        if (quality == GapQuality.peak) {
+          suggestion = durationMins >= 50
+              ? 'This is your peak focus window. Perfect for a Pomodoro session on your upcoming deadline.'
+              : 'Your best focus time. Even a 25 minute sprint on your deadline makes a difference.';
+        } else if (quality == GapQuality.good) {
+          suggestion = totalDueNodes > 0
+              ? 'Good time for coursework or reviewing your knowledge maps before your deadline.'
+              : 'Solid study window. Good time to make progress on your upcoming deadline.';
+        } else {
+          suggestion = totalDueNodes > 0
+              ? 'Lower energy period. Great for lighter work like reviewing knowledge maps or reading notes.'
+              : 'Use this time for reading or planning your approach to the upcoming deadline.';
+        }
+      } else if (totalDueNodes > 0) {
+        if (quality == GapQuality.peak) {
+          suggestion = 'Peak focus window — ideal for deep knowledge review to strengthen your memory before it fades.';
+        } else if (quality == GapQuality.good) {
+          suggestion = 'Good time to work through your knowledge map reviews before they slip further.';
+        } else {
+          suggestion = 'Low-stakes gap — perfect for quick knowledge map review to stay on top of your memory schedule.';
+        }
+      } else {
+        if (quality == GapQuality.peak) {
+          suggestion = 'Your peak focus window. Great for revision, coursework planning, or getting ahead on readings.';
+        } else if (quality == GapQuality.good) {
+          suggestion = 'Good study window. Consider reading ahead or reviewing recent lecture notes.';
+        } else {
+          suggestion = 'Use this lighter period for reading, organising notes, or planning upcoming work.';
+        }
+      }
+
+      recommendations.add(GapRecommendation(
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        duration: slot.duration,
+        quality: quality,
+        suggestion: suggestion,
+        relatedDeadlineTitle: relatedDeadline,
+        dueNodeCount: totalDueNodes > 0 ? totalDueNodes : null,
+      ));
+    }
+
+    // Sort: peak first, then chronologically within same quality
+    recommendations.sort((a, b) {
+      if (a.quality.index != b.quality.index) {
+        return a.quality.index.compareTo(b.quality.index);
+      }
+      return a.startTime.compareTo(b.startTime);
+    });
+
+    return recommendations;
+  }
 
   // ==================== UTILITY METHODS ====================
 
@@ -314,16 +517,16 @@ class TimetableController extends ChangeNotifier {
     if (moduleCode == null) return Colors.grey;
 
     final colors = [
-      const Color(0xFF3B82F6), // Blue
-      const Color(0xFF8B5CF6), // Violet
-      const Color(0xFFEC4899), // Pink
-      const Color(0xFFF59E0B), // Amber
-      const Color(0xFF10B981), // Emerald
-      const Color(0xFF06B6D4), // Cyan
-      const Color(0xFFF97316), // Orange
-      const Color(0xFF84CC16), // Lime
-      const Color(0xFFEF4444), // Red
-      const Color(0xFF6366F1), // Indigo
+      const Color(0xFF3B82F6),
+      const Color(0xFF8B5CF6),
+      const Color(0xFFEC4899),
+      const Color(0xFFF59E0B),
+      const Color(0xFF10B981),
+      const Color(0xFF06B6D4),
+      const Color(0xFFF97316),
+      const Color(0xFF84CC16),
+      const Color(0xFFEF4444),
+      const Color(0xFF6366F1),
     ];
 
     var hash = 0;
@@ -335,19 +538,16 @@ class TimetableController extends ChangeNotifier {
   }
 
   List<int> getSmartTimeRange() {
-    // Always return full 24 hours - midnight to midnight
     return [0, 24];
   }
 
   bool hasConflict(DateTime start, DateTime end, {String? excludeSessionId}) {
-    // Check against calendar events
     for (final event in _events) {
       if (start.isBefore(event.endTime) && end.isAfter(event.startTime)) {
         return true;
       }
     }
 
-    // Check against study sessions
     final sessions = _storage
         .getStudySessionsForRange(start, end)
         .where((s) => s.id != excludeSessionId);
@@ -364,7 +564,7 @@ class TimetableController extends ChangeNotifier {
     return _storage.getEventLocation(eventId);
   }
 
-  // ==================== PARSING HELPERS (from your working service) ====================
+  // ==================== PARSING HELPERS ====================
 
   DateTime? _parseDate(dynamic dtObj) {
     if (dtObj == null) return null;
@@ -563,7 +763,6 @@ class TimetableController extends ChangeNotifier {
     return fallbackMatch?.group(1);
   }
 
-  /// Convert Map to CalendarEvent
   CalendarEvent _mapToEvent(Map<String, dynamic> map) {
     final start = _asDateTime(map['dtstart'])!;
     final end = _asDateTime(map['dtend'])!;
@@ -581,7 +780,6 @@ class TimetableController extends ChangeNotifier {
     );
   }
 
-  /// Convert CalendarEvent to Map
   Map<String, dynamic> _eventToMap(CalendarEvent e) {
     return {
       'summary': e.title,

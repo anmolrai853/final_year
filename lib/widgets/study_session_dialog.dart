@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../controllers/timetable_controller.dart';
 import '../models/study_session.dart';
 
+
 class StudySessionDialog extends StatefulWidget {
   final StudySession? session;
   final DateTime? initialDate;
@@ -210,8 +211,7 @@ class _StudySessionDialogState extends State<StudySessionDialog> {
                 Slider(
                   value: _durationMinutes,
                   min: 30,
-                  max: widget.maxDurationMinutes ?? 180,
-                  divisions: ((widget.maxDurationMinutes ?? 180) - 30) ~/ 15,
+                  max: widget.maxDurationMinutes ?? (widget.session != null && widget.session!.durationMinutes > 180 ? widget.session!.durationMinutes.toDouble() : 180),                  divisions: ((widget.maxDurationMinutes ?? 180) - 30) ~/ 15,
                   label: '${_durationMinutes.toInt()} min',
                   onChanged: (value) {
                     // Round to nearest 15

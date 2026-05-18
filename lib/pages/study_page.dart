@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../models/knowledge_node.dart';
 import '../services/storage_service.dart';
 import '../services/sm2_service.dart';
+import 'pomodoro_timer_page.dart';
+import 'knowledge_maps_list_page.dart';
+import 'knowledge_graph_page.dart';
 
 class StudyPage extends StatefulWidget {
   const StudyPage({super.key});
@@ -19,13 +22,12 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
   late TabController _tabController;
 
   List<KnowledgeMap> _maps = [];
-  // All nodes across all maps
   List<_NodeWithMap> _allNodes = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadAll();
   }
 
@@ -53,7 +55,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
       .where((n) => _sm2.isDue(n.node) || (n.node.nextReviewDate == null && n.node.lastReviewDate == null))
       .toList()
     ..sort((a, b) {
-      // Overdue first, then unreviewed
       final aOverdue = a.node.nextReviewDate != null && _sm2.isDue(a.node);
       final bOverdue = b.node.nextReviewDate != null && _sm2.isDue(b.node);
       if (aOverdue && !bOverdue) return -1;
@@ -64,8 +65,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
   List<_NodeWithMap> get _reviewedNodes =>
       _allNodes.where((n) => n.node.lastReviewDate != null).toList()
         ..sort((a, b) => (_sm2.memoryRetention(a.node)).compareTo(_sm2.memoryRetention(b.node)));
-
-  // ── Stats ────────────────────────────────────────────────────────────────
 
   int get _totalReviewed => _allNodes.where((n) => n.node.lastReviewDate != null).length;
   int get _dueCount => _dueNodes.length;
@@ -79,8 +78,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
     return reviewed.fold(0.0, (s, n) => s + _sm2.memoryRetention(n.node)) / reviewed.length;
   }
 
-  // ── Save a reviewed node back to storage ──────────────────────────────────
-
   Future<void> _saveNode(_NodeWithMap nwm) async {
     final graph = _storage.getKnowledgeGraphData(nwm.map.id);
     if (graph == null) return;
@@ -89,8 +86,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
     graph.nodes[idx] = nwm.node;
     await _storage.saveKnowledgeGraphData(graph);
   }
-
-  // ── Review session ────────────────────────────────────────────────────────
 
   void _startReviewSession() {
     final due = _dueNodes;
@@ -135,49 +130,437 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
     ).then((_) => _loadAll());
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // ==================== BUILD ====================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF020617),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF020617),
-        foregroundColor: Colors.white,
-        title: const Text('Study'),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFF3B82F6),
-          labelColor: Colors.white,
-          unselectedLabelColor: const Color(0xFF64748B),
-          tabs: [
-            Tab(text: 'Due Now  ${_dueCount > 0 ? "($_dueCount)" : ""}'),
-            const Tab(text: 'All Nodes'),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Study',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      if (_dueCount > 0)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.4)),
+                          ),
+                          child: Text(
+                            '$_dueCount due',
+                            style: const TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Tabs
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: const Color(0xFF3B82F6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: const Color(0xFF94A3B8),
+                tabs: const [
+                  Tab(text: 'Focus'),
+                  Tab(text: 'Knowledge'),
+                  Tab(text: 'Review'),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Tab content
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildFocusTab(),
+                  _buildKnowledgeTab(),
+                  _buildReviewTab(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
-      body: Column(
+    );
+  }
+
+  // ==================== FOCUS TAB ====================
+
+  Widget _buildFocusTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStatsHeader(),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildDueTab(),
-                _buildAllTab(),
-              ],
+          // Quick start Pomodoro card
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PomodoroTimerPage()),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFEF4444).withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.play_arrow, color: Colors.white, size: 32),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Start Pomodoro',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '25 min focus • 5 min break',
+                          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 18),
+                ],
+              ),
             ),
           ),
+
+          const SizedBox(height: 24),
+
+          // Quick presets
+          const Text(
+            'Quick Start',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Expanded(child: _buildPresetCard('Short', 15, 3, const Color(0xFF10B981))),
+              const SizedBox(width: 12),
+              Expanded(child: _buildPresetCard('Classic', 25, 5, const Color(0xFFEF4444))),
+              const SizedBox(width: 12),
+              Expanded(child: _buildPresetCard('Deep', 45, 10, const Color(0xFF8B5CF6))),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Tips
+          const Text(
+            'Focus Tips',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          _buildTipCard(Icons.phone_android, 'Put your phone on Do Not Disturb'),
+          _buildTipCard(Icons.headphones, 'Try lo-fi music or white noise'),
+          _buildTipCard(Icons.water_drop, 'Keep water nearby'),
+          _buildTipCard(Icons.visibility_off, 'Close unrelated tabs'),
+
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  // ── Stats header ──────────────────────────────────────────────────────────
+  Widget _buildPresetCard(String label, int workMins, int breakMins, Color color) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PomodoroTimerPage(
+              workMinutes: workMins,
+              shortBreakMinutes: breakMins,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.timer, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${workMins}m / ${breakMins}m',
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTipCard(IconData icon, String text) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF64748B), size: 20),
+          const SizedBox(width: 12),
+          Text(text, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  // ==================== KNOWLEDGE TAB ====================
+
+  Widget _buildKnowledgeTab() {
+    final mapCount = _maps.length;
+    final nodeCount = _allNodes.length;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Stats
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildKnowledgeStat('Maps', '$mapCount', const Color(0xFF8B5CF6)),
+                _buildKnowledgeStat('Nodes', '$nodeCount', const Color(0xFF3B82F6)),
+                _buildKnowledgeStat('Due', '$_dueCount', const Color(0xFFEF4444)),
+                _buildKnowledgeStat('Strong', '$_strongCount', const Color(0xFF10B981)),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Open maps button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KnowledgeMapsListPage()),
+                ).then((_) => _loadAll());
+              },
+              icon: const Icon(Icons.account_tree),
+              label: const Text('Open Knowledge Maps'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Recent maps
+          if (_maps.isNotEmpty) ...[
+            const Text(
+              'Your Maps',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            ..._maps.take(5).map((map) {
+              final graphData = _storage.getKnowledgeGraphData(map.id);
+              final nodes = graphData?.nodes.length ?? 0;
+              final edges = graphData?.edges.length ?? 0;
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => KnowledgeGraphPage(mapId: map.id),
+                    ),
+                  ).then((_) => _loadAll());
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF1E293B)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.account_tree, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(map.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$nodes nodes • $edges links',
+                              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, color: Color(0xFF64748B), size: 14),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ] else ...[
+            Center(
+              child: Column(
+                children: [
+                  const SizedBox(height: 32),
+                  Icon(Icons.account_tree_outlined, size: 64, color: Colors.white.withOpacity(0.2)),
+                  const SizedBox(height: 12),
+                  const Text('No maps yet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 4),
+                  const Text('Create your first knowledge map', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKnowledgeStat(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+      ],
+    );
+  }
+
+  // ==================== REVIEW TAB ====================
+
+  Widget _buildReviewTab() {
+    return Column(
+      children: [
+        _buildStatsHeader(),
+        Expanded(
+          child: _dueNodes.isEmpty ? _buildReviewEmptyState() : _buildReviewList(),
+        ),
+      ],
+    );
+  }
 
   Widget _buildStatsHeader() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
@@ -188,10 +571,10 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
         children: [
           Row(
             children: [
-              _statBox('${_dueCount}', 'Due', const Color(0xFF3B82F6)),
-              _statBox('${_strongCount}', 'Strong', const Color(0xFF22C55E)),
-              _statBox('${_fadingCount}', 'Fading', const Color(0xFFEAB308)),
-              _statBox('${_atRiskCount}', 'At Risk', const Color(0xFFEF4444)),
+              _statBox('$_dueCount', 'Due', const Color(0xFF3B82F6)),
+              _statBox('$_strongCount', 'Strong', const Color(0xFF22C55E)),
+              _statBox('$_fadingCount', 'Fading', const Color(0xFFEAB308)),
+              _statBox('$_atRiskCount', 'At Risk', const Color(0xFFEF4444)),
             ],
           ),
           if (_totalReviewed > 0) ...[
@@ -210,7 +593,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
               ],
             ),
             const SizedBox(height: 8),
-            // Retention bar
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
@@ -241,6 +623,36 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
     );
   }
 
+  Widget _buildReviewEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.check_circle_outline, size: 72, color: Color(0xFF22C55E)),
+          const SizedBox(height: 16),
+          const Text('All caught up!', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(
+            _allNodes.isEmpty
+                ? 'Add nodes to your knowledge maps\nto start tracking your memory.'
+                : 'No reviews due right now.\nCome back later!',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewList() {
+    final due = _dueNodes;
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      itemCount: due.length,
+      itemBuilder: (_, i) => _buildNodeCard(due[i]),
+    );
+  }
+
   Widget _statBox(String value, String label, Color color) {
     return Expanded(
       child: Column(
@@ -256,91 +668,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
     if (r >= 0.75) return const Color(0xFF22C55E);
     if (r >= 0.40) return const Color(0xFFEAB308);
     return const Color(0xFFEF4444);
-  }
-
-  // ── Due tab ───────────────────────────────────────────────────────────────
-
-  Widget _buildDueTab() {
-    final due = _dueNodes;
-    if (due.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.check_circle_outline, size: 72, color: Color(0xFF22C55E)),
-            const SizedBox(height: 16),
-            const Text('All caught up!', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(
-              _allNodes.isEmpty
-                  ? 'Add nodes to your knowledge maps\nto start tracking your memory.'
-                  : 'No reviews due right now.\nCome back later!',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-            ),
-          ],
-        ),
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      itemCount: due.length,
-      itemBuilder: (_, i) => _buildNodeCard(due[i]),
-    );
-  }
-
-  // ── All nodes tab ─────────────────────────────────────────────────────────
-
-  Widget _buildAllTab() {
-    if (_allNodes.isEmpty) {
-      return const Center(
-        child: Text('No nodes yet. Create a knowledge map first.',
-            style: TextStyle(color: Color(0xFF64748B))),
-      );
-    }
-    // Group by map
-    final byMap = <String, List<_NodeWithMap>>{};
-    for (final n in _allNodes) {
-        byMap.putIfAbsent(n.map.id, () => <_NodeWithMap>[]).add(n);
-    }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      children: _maps
-          .where((m) => byMap.containsKey(m.id))
-          .map((m) => _buildMapSection(m, byMap[m.id]!))
-          .toList(),
-    );
-  }
-
-  Widget _buildMapSection(KnowledgeMap map, List<_NodeWithMap> nodes) {
-    final reviewed = nodes.where((n) => n.node.lastReviewDate != null).length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 10, height: 10,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(map.name,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
-              const SizedBox(width: 8),
-              Text('$reviewed/${nodes.length} reviewed',
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-            ],
-          ),
-        ),
-        ...nodes.map((n) => _buildNodeCard(n)),
-        const SizedBox(height: 8),
-      ],
-    );
   }
 
   Widget _buildNodeCard(_NodeWithMap nwm) {
@@ -363,14 +690,13 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
             color: isDue
                 ? const Color(0xFFEF4444).withOpacity(0.6)
                 : isUnreviewed
-                    ? const Color(0xFF334155)
-                    : status.color.withOpacity(0.3),
+                ? const Color(0xFF334155)
+                : status.color.withOpacity(0.3),
             width: isDue ? 1.5 : 1,
           ),
         ),
         child: Row(
           children: [
-            // Type icon circle
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
@@ -380,7 +706,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
               child: Icon(node.type.icon, color: node.type.color, size: 18),
             ),
             const SizedBox(width: 12),
-            // Label + map name
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +719,6 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
               ),
             ),
             const SizedBox(width: 8),
-            // Status column
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -410,8 +734,8 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
                     isDue
                         ? 'Overdue ${-days}d'
                         : days == 0
-                            ? 'Due today'
-                            : 'In ${days}d',
+                        ? 'Due today'
+                        : 'In ${days}d',
                     style: TextStyle(
                       color: isDue ? const Color(0xFFEF4444) : const Color(0xFF64748B),
                       fontSize: 10,
@@ -440,7 +764,7 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
   }
 }
 
-// ── Data wrapper ─────────────────────────────────────────────────────────────
+// ==================== DATA WRAPPER ====================
 
 class _NodeWithMap {
   KnowledgeNode node;
@@ -448,7 +772,7 @@ class _NodeWithMap {
   _NodeWithMap({required this.node, required this.map});
 }
 
-// ── Full-screen review session ───────────────────────────────────────────────
+// ==================== FULL-SCREEN REVIEW SESSION ====================
 
 class _ReviewSessionPage extends StatefulWidget {
   final List<_NodeWithMap> nodes;
@@ -485,7 +809,6 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
         _revealed = false;
         _selectedQuality = -1;
       } else {
-        // Done
         _showDoneDialog();
       }
     });
@@ -497,7 +820,7 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0F172A),
-        title: const Text('Session Complete! 🎉', style: TextStyle(color: Colors.white)),
+        title: const Text('Session Complete!', style: TextStyle(color: Colors.white)),
         content: Text(
           'You reviewed $_reviewed card${_reviewed == 1 ? '' : 's'}.\nGreat work!',
           style: const TextStyle(color: Color(0xFF94A3B8)),
@@ -543,7 +866,6 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Map label
             Row(children: [
               const Icon(Icons.account_tree, size: 13, color: Color(0xFF64748B)),
               const SizedBox(width: 5),
@@ -588,7 +910,7 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Text('Tap to reveal notes',
-                            style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+                              style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
                         ),
                       ),
                   ],
@@ -597,7 +919,7 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
             ),
             const SizedBox(height: 20),
 
-            // Memory stats (if previously reviewed)
+            // Memory stats
             if (node.lastReviewDate != null) ...[
               Container(
                 padding: const EdgeInsets.all(14),
@@ -624,10 +946,10 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
 
             // Quality rating
             const Text('How well did you recall this?',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
             const SizedBox(height: 4),
             const Text('0 = complete blackout  •  5 = perfect recall',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
             const SizedBox(height: 12),
             Row(
               children: List.generate(6, (q) {
@@ -635,7 +957,7 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
                   const Color(0xFFEF4444), const Color(0xFFEF4444), const Color(0xFFF97316),
                   const Color(0xFFEAB308), const Color(0xFF84CC16), const Color(0xFF22C55E),
                 ];
-                final hints = ['✗', '~✗', '~✓', '✓!', '✓', '✓✓'];
+                final hints = ['X', '~X', '~V', 'V!', 'V', 'VV'];
                 final col = qColors[q];
                 final active = _selectedQuality == q;
                 return Expanded(
@@ -688,7 +1010,7 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
-                  _current + 1 < widget.nodes.length ? 'Next →' : 'Finish Session',
+                  _current + 1 < widget.nodes.length ? 'Next' : 'Finish Session',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
@@ -708,7 +1030,7 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
 
   String _qualityLabel(int q) {
     const labels = [
-      'Complete blackout – resetting progress',
+      'Complete blackout — resetting progress',
       'Incorrect, but remembered on seeing answer',
       'Incorrect, but felt easy',
       'Correct with serious difficulty',
@@ -732,7 +1054,7 @@ class _ReviewSessionPageState extends State<_ReviewSessionPage> {
   }
 }
 
-// ── Per-node review bottom sheet (used when tapping a card) ──────────────────
+// ==================== PER-NODE REVIEW BOTTOM SHEET ====================
 
 class _ReviewSheet extends StatefulWidget {
   final _NodeWithMap nwm;
@@ -770,7 +1092,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
             Icon(node.type.icon, color: node.type.color, size: 22),
             const SizedBox(width: 10),
             Expanded(child: Text(node.label,
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600))),
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
@@ -790,7 +1112,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
             const SizedBox(height: 6),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Text('Retention: ${(retention * 100).toStringAsFixed(0)}%',
-                style: TextStyle(color: status.color, fontSize: 12, fontWeight: FontWeight.w600)),
+                  style: TextStyle(color: status.color, fontSize: 12, fontWeight: FontWeight.w600)),
               Text(
                 days < 0 ? 'Overdue by ${-days}d' : days == 0 ? 'Due today' : 'Due in ${days}d',
                 style: TextStyle(color: days <= 0 ? const Color(0xFFEF4444) : const Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w600),
@@ -808,10 +1130,10 @@ class _ReviewSheetState extends State<_ReviewSheet> {
           ],
 
           const Text('How well did you recall this?',
-            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           const Text('0 = complete blackout  •  5 = perfect recall',
-            style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
           const SizedBox(height: 12),
           Row(
             children: List.generate(6, (q) {
@@ -819,7 +1141,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
                 const Color(0xFFEF4444), const Color(0xFFEF4444), const Color(0xFFF97316),
                 const Color(0xFFEAB308), const Color(0xFF84CC16), const Color(0xFF22C55E),
               ];
-              final hints = ['✗', '~✗', '~✓', '✓!', '✓', '✓✓'];
+              final hints = ['X', '~X', '~V', 'V!', 'V', 'VV'];
               final col = qColors[q];
               final active = _selectedQuality == q;
               return Expanded(
@@ -848,8 +1170,8 @@ class _ReviewSheetState extends State<_ReviewSheet> {
             Center(child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
               child: Text(_qualityLabel(_selectedQuality),
-                key: ValueKey(_selectedQuality),
-                style: TextStyle(color: _qualityColor(_selectedQuality), fontSize: 13, fontWeight: FontWeight.w600)),
+                  key: ValueKey(_selectedQuality),
+                  style: TextStyle(color: _qualityColor(_selectedQuality), fontSize: 13, fontWeight: FontWeight.w600)),
             )),
             const SizedBox(height: 6),
             Center(child: Text(
@@ -891,7 +1213,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
 
   String _qualityLabel(int q) {
     const labels = [
-      'Complete blackout – resetting progress',
+      'Complete blackout — resetting progress',
       'Incorrect, but remembered on seeing answer',
       'Incorrect, but felt easy',
       'Correct with serious difficulty',
@@ -915,7 +1237,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
   }
 }
 
-// ── Forgetting curve chart ────────────────────────────────────────────────────
+// ==================== FORGETTING CURVE CHART ====================
 
 class _ForgettingCurveWidget extends StatelessWidget {
   final KnowledgeNode node;
@@ -947,7 +1269,6 @@ class _ForgettingCurvePainter extends CustomPainter {
     final daysSinceReview = DateTime.now().difference(node.lastReviewDate!).inHours / 24.0;
     final stability = max(0.1, node.interval * (node.easeFactor / 2.5));
 
-    // Gradient fill
     final path = Path()..moveTo(0, size.height);
     for (int px = 0; px <= size.width.toInt(); px++) {
       final t = (px / size.width) * totalDays;
@@ -962,13 +1283,12 @@ class _ForgettingCurvePainter extends CustomPainter {
         Color(0x4D22C55E), Color(0x33EAB308), Color(0x1AEF4444),
       ]).createShader(Rect.fromLTWH(0, 0, size.width, size.height)));
 
-    // Curve line
     final currentR = sm2.memoryRetention(node);
     final lineColor = currentR >= 0.75
         ? const Color(0xFF22C55E)
         : currentR >= 0.40
-            ? const Color(0xFFEAB308)
-            : const Color(0xFFEF4444);
+        ? const Color(0xFFEAB308)
+        : const Color(0xFFEF4444);
 
     final linePath = Path();
     bool first = true;
@@ -982,21 +1302,18 @@ class _ForgettingCurvePainter extends CustomPainter {
     canvas.drawPath(linePath, Paint()
       ..color = lineColor..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
 
-    // "Now" line
     final nowX = (daysSinceReview / totalDays * size.width).clamp(0.0, size.width);
     canvas.drawLine(Offset(nowX, 0), Offset(nowX, size.height),
-      Paint()..color = Colors.white.withOpacity(0.35)..strokeWidth = 1.5);
+        Paint()..color = Colors.white.withOpacity(0.35)..strokeWidth = 1.5);
 
-    // Next review line
     if (node.nextReviewDate != null) {
       final daysToNext = node.nextReviewDate!.difference(node.lastReviewDate!).inHours / 24.0;
       final nextX = (daysToNext / totalDays * size.width).clamp(0.0, size.width);
       canvas.drawLine(Offset(nextX, 0), Offset(nextX, size.height),
-        Paint()..color = const Color(0xFF3B82F6).withOpacity(0.6)..strokeWidth = 1.5);
+          Paint()..color = const Color(0xFF3B82F6).withOpacity(0.6)..strokeWidth = 1.5);
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter old) => true;
 }
-
