@@ -222,6 +222,47 @@ class _SettingsPageState extends State<SettingsPage> {
                 ? () => _showDeadlineWarningPicker()
                 : null,
           ),
+          const Divider(color: Color(0xFF1E293B), height: 1, indent: 16, endIndent: 16),
+          ListTile(
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.notifications_active, color: Color(0xFF10B981)),
+            ),
+            title: const Text(
+              'Test Class Reminder',
+              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+            subtitle: const Text(
+              'Fires a demo notification in 10 seconds',
+              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+            ),
+            trailing: ElevatedButton(
+              onPressed: () async {
+                await _notificationService.scheduleImmediateTest();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('🔔 Notification fires in 10 seconds — go to your home screen!'),
+                      backgroundColor: Color(0xFF10B981),
+                      duration: Duration(seconds: 4),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Test', style: TextStyle(fontSize: 13)),
+            ),
+          ),
 
           // Test notification button
           const Divider(color: Color(0xFF1E293B), height: 1, indent: 16, endIndent: 16),

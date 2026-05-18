@@ -97,10 +97,28 @@ class NotificationService {
   }
 
   // ==================== CLASS REMINDERS ====================
+  Future<void> scheduleImmediateTest() async {
+    if (!_initialized) return;
+    try {
+      await _scheduleNotification(
+        id: 99999,
+        title: '🎒 Time to head to class',
+        body: 'ARTIFICIAL INTELLIGENCE at Burnaby Building, 3.30 starts in 15 minutes',
+        scheduledTime: DateTime.now().add(const Duration(seconds: 10)),
+        payload: 'class:test',
+        channelId: 'class-reminders',
+        channelName: 'Class Reminders',
+        channelDescription: 'Reminders to leave for your classes',
+      );
+      debugPrint('Test notification scheduled — fires in 10 seconds');
+    } catch (e) {
+      debugPrint('Test notification error: $e');
+    }
+  }
+
 
   Future<void> scheduleClassReminder(CalendarEvent event) async {
     if (!_initialized) return;
-
     try {
       final prefs = getNotificationPreferences();
       if (!prefs.classRemindersEnabled) return;
@@ -108,20 +126,28 @@ class NotificationService {
       final reminderTime = event.startTime.subtract(
         Duration(minutes: prefs.classReminderMinutes),
       );
-
       if (reminderTime.isBefore(DateTime.now())) return;
+
+      // Build a location-aware body so the user knows where they're heading
+      final location = _storage.getEventLocation(event.id) ?? event.location;
+      final locationSuffix =
+      (location != null && location.isNotEmpty) ? ' at $location' : '';
+
+      final minutesText = prefs.classReminderMinutes == 1
+          ? '1 minute'
+          : '${prefs.classReminderMinutes} minutes';
 
       final id = _generateId(event.id, 'class');
 
       await _scheduleNotification(
         id: id,
-        title: 'Upcoming Class',
-        body: '${event.title} starts in ${prefs.classReminderMinutes} minutes',
+        title: '🎒 Time to head to class',
+        body: '${event.title}$locationSuffix starts in $minutesText',
         scheduledTime: reminderTime,
         payload: 'class:${event.id}',
-        channelId: 'class_reminders',
+        channelId: 'class-reminders',
         channelName: 'Class Reminders',
-        channelDescription: 'Reminders before your classes start',
+        channelDescription: 'Reminders to leave for your classes',
       );
     } catch (e) {
       debugPrint('Failed to schedule class reminder: $e');
