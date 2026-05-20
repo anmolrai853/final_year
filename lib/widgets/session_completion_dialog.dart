@@ -12,7 +12,8 @@ class SessionCompletionDialog extends StatefulWidget {
   });
 
   @override
-  State<SessionCompletionDialog> createState() => _SessionCompletionDialogState();
+  State<SessionCompletionDialog> createState() =>
+      _SessionCompletionDialogState();
 }
 
 class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
@@ -28,6 +29,12 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
     super.initState();
     _actualMinutes = widget.session.durationMinutes;
     _completedFull = true;
+  }
+
+  @override
+  void dispose() {
+    _topicsController.dispose();
+    super.dispose();
   }
 
   @override
@@ -47,8 +54,10 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
               'How did "${widget.session.title}" go?',
               style: const TextStyle(color: Colors.white70),
             ),
+
             const SizedBox(height: 20),
 
+            // ── Actual Study Time ──────────────────────────────────────
             _buildSection('Actual Study Time'),
             Text(
               '$_actualMinutes minutes',
@@ -62,48 +71,70 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
               value: _actualMinutes.toDouble(),
               min: 0,
               max: (widget.session.durationMinutes * 1.5).toDouble(),
-              divisions: widget.session.durationMinutes ~/ 5,
+              divisions:
+              (widget.session.durationMinutes ~/ 5).clamp(1, 999),
               activeColor: const Color(0xFF3B82F6),
               onChanged: (value) {
                 setState(() {
                   _actualMinutes = value.round();
-                  _completedFull = _actualMinutes >= widget.session.durationMinutes;
+                  _completedFull =
+                      _actualMinutes >= widget.session.durationMinutes;
                 });
               },
             ),
 
             const SizedBox(height: 20),
 
+            // ── Focus Level ────────────────────────────────────────────
+            // Using Wrap so items flow onto multiple lines if needed
+            // and never overflow — safe inside SingleChildScrollView
             _buildSection('Focus Level'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
               children: FocusLevel.values.map((level) {
                 final isSelected = _focusLevel == level;
                 return GestureDetector(
                   onTap: () => setState(() => _focusLevel = level),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(8),
+                    width: 56,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 4),
                     decoration: BoxDecoration(
-                      color: isSelected ? level.color.withOpacity(0.2) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
+                      color: isSelected
+                          ? level.color.withOpacity(0.2)
+                          : const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isSelected ? level.color : Colors.transparent,
+                        color: isSelected
+                            ? level.color
+                            : Colors.transparent,
                         width: 2,
                       ),
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _getFocusIcon(level),
-                          color: isSelected ? level.color : Colors.white.withOpacity(0.5),
+                          size: 20,
+                          color: isSelected
+                              ? level.color
+                              : Colors.white.withOpacity(0.4),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           level.label,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: isSelected ? level.color : Colors.white.withOpacity(0.5),
-                            fontSize: 10,
+                            color: isSelected
+                                ? level.color
+                                : Colors.white.withOpacity(0.4),
+                            fontSize: 9,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -115,16 +146,22 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
 
             const SizedBox(height: 20),
 
+            // ── Understanding ──────────────────────────────────────────
             _buildSection('Understanding'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) {
                 final star = index + 1;
                 return IconButton(
-                  onPressed: () => setState(() => _understanding = star),
+                  onPressed: () =>
+                      setState(() => _understanding = star),
                   icon: Icon(
-                    star <= _understanding ? Icons.star : Icons.star_border,
-                    color: star <= _understanding ? Colors.amber : Colors.white.withOpacity(0.3),
+                    star <= _understanding
+                        ? Icons.star
+                        : Icons.star_border,
+                    color: star <= _understanding
+                        ? Colors.amber
+                        : Colors.white.withOpacity(0.3),
                   ),
                 );
               }),
@@ -132,6 +169,7 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
 
             const SizedBox(height: 20),
 
+            // ── Interruptions ──────────────────────────────────────────
             _buildSection('Interruptions'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -143,7 +181,7 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
                   icon: const Icon(Icons.remove_circle_outline),
                   color: Colors.white70,
                 ),
-                Container(
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     '$_interruptions',
@@ -164,13 +202,15 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
 
             const SizedBox(height: 20),
 
+            // ── Topics Covered ─────────────────────────────────────────
             _buildSection('Topics Covered (Optional)'),
             TextField(
               controller: _topicsController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'e.g., Chapter 3, Sorting algorithms...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                hintStyle:
+                TextStyle(color: Colors.white.withOpacity(0.3)),
                 filled: true,
                 fillColor: const Color(0xFF1E293B),
                 border: OutlineInputBorder(
@@ -236,7 +276,9 @@ class _SessionCompletionDialogState extends State<SessionCompletionDialog> {
       focusLevel: _focusLevel,
       interruptionCount: _interruptions,
       understandingRating: _understanding,
-      topicsCovered: _topicsController.text.isEmpty ? null : _topicsController.text,
+      topicsCovered: _topicsController.text.isEmpty
+          ? null
+          : _topicsController.text,
       completedFullSession: _completedFull,
       completedAt: DateTime.now(),
     );

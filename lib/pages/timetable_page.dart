@@ -71,7 +71,6 @@ class _TimetablePageState extends State<TimetablePage> {
         _todaysGaps = gaps;
       });
     }
-    // Schedule a notification at the start of each gap
     await _notifications.scheduleGapNotifications(gaps);
   }
 
@@ -113,10 +112,7 @@ class _TimetablePageState extends State<TimetablePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             _buildHeader(),
-
-            // Scrollable top section: next event card + gap recommendations
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: NextEventCard(
@@ -124,25 +120,15 @@ class _TimetablePageState extends State<TimetablePage> {
                 onLocationTap: (event) => _showLocationDialog(event),
               ),
             ),
-
-            // Gap recommendations card — only shown when gaps exist
             if (_todaysGaps.isNotEmpty)
               GapRecommendationsCard(
                 gaps: _todaysGaps,
                 hasAnalyticsData: _controller.hasAnalyticsData,
               ),
-
             const SizedBox(height: 8),
-
-            // Week navigation bar
             _buildWeekNavigation(),
-
             const SizedBox(height: 8),
-
-            // Day headers
             _buildDayHeaders(),
-
-            // Timetable grid
             Expanded(
               child: _buildTimetableGrid(),
             ),
@@ -196,12 +182,16 @@ class _TimetablePageState extends State<TimetablePage> {
             icon: const Icon(Icons.chevron_left),
             color: Colors.white,
           ),
-          Text(
-            '${dateFormat.format(_currentWeekStart)} - ${dateFormat.format(weekEnd)}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+          Flexible(
+            child: Text(
+              '${dateFormat.format(_currentWeekStart)} - ${dateFormat.format(weekEnd)}',
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
           IconButton(
@@ -281,8 +271,7 @@ class _TimetablePageState extends State<TimetablePage> {
             Expanded(
               child: Row(
                 children: List.generate(7, (dayIndex) {
-                  final day =
-                  _currentWeekStart.add(Duration(days: dayIndex));
+                  final day = _currentWeekStart.add(Duration(days: dayIndex));
                   return Expanded(
                     child: _buildDayColumn(day),
                   );
@@ -404,37 +393,56 @@ class _TimetablePageState extends State<TimetablePage> {
       child: GestureDetector(
         onTap: () => _showCreateSessionDialog(day, slot),
         child: Container(
-          margin: const EdgeInsets.all(2),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.all(height < 50 ? 4 : 6),
           decoration: BoxDecoration(
             color: const Color(0xFF10B981).withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: const Color(0xFF10B981).withOpacity(0.3),
               width: 1,
-              style: BorderStyle.solid,
             ),
           ),
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.add_circle_outline,
-                  size: 16,
-                  color: const Color(0xFF10B981).withOpacity(0.6),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  slot.formattedDuration,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: const Color(0xFF10B981).withOpacity(0.6),
-                  ),
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxHeight < 42;
+
+                if (compact) {
+                  return Icon(
+                    Icons.add_circle_outline,
+                    size: 14,
+                    color: const Color(0xFF10B981).withOpacity(0.7),
+                  );
+                }
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_circle_outline,
+                      size: 16,
+                      color: const Color(0xFF10B981).withOpacity(0.6),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      slot.formattedDuration,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: const Color(0xFF10B981).withOpacity(0.6),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -457,46 +465,62 @@ class _TimetablePageState extends State<TimetablePage> {
         onTap: () => _showLocationDialog(event),
         child: Container(
           margin: const EdgeInsets.all(2),
-          padding: const EdgeInsets.all(6),
+          padding: EdgeInsets.all(height < 50 ? 4 : 6),
+          clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
             color: isPast ? color.withOpacity(0.3) : color.withOpacity(0.8),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                event.title,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: isPast
-                      ? Colors.white.withOpacity(0.5)
-                      : Colors.white,
-                  decoration:
-                  isPast ? TextDecoration.lineThrough : null,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (event.location != null &&
-                  event.location!.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 8,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final tiny = constraints.maxHeight < 32;
+              final compact = constraints.maxHeight < 52;
+
+              if (tiny) {
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    event.title,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
                       color: isPast
-                          ? Colors.white.withOpacity(0.4)
-                          : Colors.white.withOpacity(0.8),
+                          ? Colors.white.withOpacity(0.5)
+                          : Colors.white,
+                      decoration:
+                      isPast ? TextDecoration.lineThrough : null,
                     ),
-                    const SizedBox(width: 2),
-                    Expanded(
-                      child: Text(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }
+
+              if (compact) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      event.title,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: isPast
+                            ? Colors.white.withOpacity(0.5)
+                            : Colors.white,
+                        decoration:
+                        isPast ? TextDecoration.lineThrough : null,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (event.location != null && event.location!.isNotEmpty)
+                      Text(
                         event.location!,
                         style: TextStyle(
-                          fontSize: 8,
+                          fontSize: 7,
                           color: isPast
                               ? Colors.white.withOpacity(0.4)
                               : Colors.white.withOpacity(0.8),
@@ -504,11 +528,58 @@ class _TimetablePageState extends State<TimetablePage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isPast
+                          ? Colors.white.withOpacity(0.5)
+                          : Colors.white,
+                      decoration:
+                      isPast ? TextDecoration.lineThrough : null,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (event.location != null && event.location!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 8,
+                          color: isPast
+                              ? Colors.white.withOpacity(0.4)
+                              : Colors.white.withOpacity(0.8),
+                        ),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            event.location!,
+                            style: TextStyle(
+                              fontSize: 8,
+                              color: isPast
+                                  ? Colors.white.withOpacity(0.4)
+                                  : Colors.white.withOpacity(0.8),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -516,11 +587,21 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   Widget _buildStudySessionBlock(DateTime day, StudySession session) {
-    final startHour =
-        session.startTime.hour + session.startTime.minute / 60;
-    final endHour = session.endTime.hour + session.endTime.minute / 60;
+    final startHour = session.startTime.hour + session.startTime.minute / 60;
+    // Calculate endHour directly from duration to avoid any endTime getter issues.
+    // IMPORTANT: ensure we use double division, otherwise integer truncation can shrink blocks.
+    final endHour = startHour + (session.durationMinutes / 60.0);
+
     final top = (startHour - _startHour) * _hourHeight;
-    final height = (endHour - startHour) * _hourHeight;
+
+    // Height should be exactly proportional to duration.
+    final rawHeight = (endHour - startHour) * _hourHeight;
+
+    // Clamp height to avoid vanishing blocks for very short sessions, but keep visual accuracy.
+    final height = rawHeight.clamp(
+      _hourHeight / 4, // 15 minutes minimum visible height
+      (_endHour - _startHour) * _hourHeight,
+    );
 
     final color = session.type.color;
     final isPast = session.isPast;
@@ -551,80 +632,170 @@ class _TimetablePageState extends State<TimetablePage> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             margin: const EdgeInsets.all(2),
-            padding: const EdgeInsets.all(6),
+            padding: EdgeInsets.all(height < 50 ? 4 : 6),
+            clipBehavior: Clip.hardEdge,
             decoration: BoxDecoration(
-              color:
-              isPast ? color.withOpacity(0.3) : color.withOpacity(0.8),
+              color: isPast ? color.withOpacity(0.3) : color.withOpacity(0.8),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: isPast ? color.withOpacity(0.3) : color,
                 width: session.isCompleted ? 3 : 1,
               ),
             ),
-            child: Stack(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final tiny = constraints.maxHeight < 32;
+                final compact = constraints.maxHeight < 52;
+
+                return Stack(
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          session.type.icon,
-                          size: 12,
-                          color: isPast
-                              ? Colors.white.withOpacity(0.5)
-                              : Colors.white,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            session.title,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                    if (tiny)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: [
+                            Icon(
+                              session.type.icon,
+                              size: 10,
                               color: isPast
                                   ? Colors.white.withOpacity(0.5)
                                   : Colors.white,
-                              decoration: session.isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : null,
                             ),
-                            maxLines: 2,
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                session.title,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: isPast
+                                      ? Colors.white.withOpacity(0.5)
+                                      : Colors.white,
+                                  decoration: session.isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (compact)
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                session.type.icon,
+                                size: 11,
+                                color: isPast
+                                    ? Colors.white.withOpacity(0.5)
+                                    : Colors.white,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  session.title,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: isPast
+                                        ? Colors.white.withOpacity(0.5)
+                                        : Colors.white,
+                                    decoration: session.isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${session.durationMinutes} min',
+                            style: TextStyle(
+                              fontSize: 7,
+                              color: isPast
+                                  ? Colors.white.withOpacity(0.4)
+                                  : Colors.white.withOpacity(0.8),
+                            ),
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                        ],
+                      )
+                    else
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                session.type.icon,
+                                size: 12,
+                                color: isPast
+                                    ? Colors.white.withOpacity(0.5)
+                                    : Colors.white,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  session.title,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: isPast
+                                        ? Colors.white.withOpacity(0.5)
+                                        : Colors.white,
+                                    decoration: session.isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${session.durationMinutes} min',
+                            style: TextStyle(
+                              fontSize: 8,
+                              color: isPast
+                                  ? Colors.white.withOpacity(0.4)
+                                  : Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (session.isCompleted)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            size: 10,
+                            color: Colors.white,
+                          ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${session.durationMinutes} min',
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: isPast
-                            ? Colors.white.withOpacity(0.4)
-                            : Colors.white.withOpacity(0.8),
                       ),
-                    ),
                   ],
-                ),
-                if (session.isCompleted)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        size: 10,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-              ],
+                );
+              },
             ),
           ),
         ),

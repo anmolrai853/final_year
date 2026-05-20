@@ -419,7 +419,34 @@ class TimetableController extends ChangeNotifier {
     return colors[hash.abs() % colors.length];
   }
 
-  List<int> getSmartTimeRange() => [0, 24];
+  List<int> getSmartTimeRange() {
+    final today = DateTime.now();
+    final weekStart = _startOfWeekMonday(today);
+    final allEvents = getEventsForRange(
+        weekStart, weekStart.add(const Duration(days: 7)));
+    final allSessions = getStudySessionsForRange(
+        weekStart, weekStart.add(const Duration(days: 7)));
+
+    if (allEvents.isEmpty && allSessions.isEmpty) return [8, 20];
+
+    int earliest = 23;
+    int latest = 1;
+
+    for (final e in allEvents) {
+      if (e.startTime.hour < earliest) earliest = e.startTime.hour;
+      if (e.endTime.hour > latest) latest = e.endTime.hour;
+    }
+    for (final s in allSessions) {
+      if (s.startTime.hour < earliest) earliest = s.startTime.hour;
+      if (s.endTime.hour > latest) latest = s.endTime.hour;
+    }
+
+    // Add 1 hour padding each side, clamped to 0-24
+    return [
+      (earliest - 1).clamp(0, 23),
+      (latest + 1).clamp(1, 24),
+    ];
+  }
 
   bool hasConflict(DateTime start, DateTime end,
       {String? excludeSessionId}) {

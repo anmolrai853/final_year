@@ -7,6 +7,8 @@ import '../services/sm2_service.dart';
 import 'pomodoro_timer_page.dart';
 import 'knowledge_maps_list_page.dart';
 import 'knowledge_graph_page.dart';
+import '../models/study_session.dart';
+import 'package:uuid/uuid.dart';
 
 class StudyPage extends StatefulWidget {
   const StudyPage({super.key});
@@ -221,6 +223,17 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
     );
   }
 
+  StudySession _quickSession(String title, int workMinutes) {
+    final now = DateTime.now();
+    return StudySession(
+      id: const Uuid().v4(),
+      title: title,
+      type: StudySessionType.revision,
+      startTime: now,
+      durationMinutes: workMinutes,
+      isCompleted: false,
+    );
+  }
   // ==================== FOCUS TAB ====================
 
   Widget _buildFocusTab() {
@@ -234,7 +247,11 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PomodoroTimerPage()),
+                MaterialPageRoute(
+                  builder: (_) => PomodoroTimerPage(
+                    session: _quickSession('Quick Focus Session', 25),
+                  ),
+                ),
               );
             },
             child: Container(
@@ -327,9 +344,9 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
           ),
           const SizedBox(height: 12),
 
-          _buildTipCard(Icons.phone_android, 'Put your phone on Do Not Disturb'),
+          _buildTipCard(Icons.phone_android, 'Put your phone on Do Not Disturb!'),
           _buildTipCard(Icons.headphones, 'Try lo-fi music or white noise'),
-          _buildTipCard(Icons.water_drop, 'Keep water nearby'),
+          _buildTipCard(Icons.water_drop, 'Keep water nearby, stay hydrated'),
           _buildTipCard(Icons.visibility_off, 'Close unrelated tabs'),
 
           const SizedBox(height: 32),
@@ -345,6 +362,7 @@ class _StudyPageState extends State<StudyPage> with SingleTickerProviderStateMix
           context,
           MaterialPageRoute(
             builder: (_) => PomodoroTimerPage(
+              session: _quickSession('$label Focus Session', workMins),
               workMinutes: workMins,
               shortBreakMinutes: breakMins,
             ),

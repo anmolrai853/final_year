@@ -320,7 +320,7 @@ class _GapRecommendationsCardState extends State<GapRecommendationsCard>
               _actionButton(
                 context,
                 icon: Icons.play_circle_outline,
-                label: 'Pomodoro',
+                label: 'Pomodoro Timer',
                 color: const Color(0xFFEF4444),
                 onTap: () => Navigator.push(
                   context,

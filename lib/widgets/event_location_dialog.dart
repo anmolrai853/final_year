@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../controllers/timetable_controller.dart';
 import '../models/event.dart';
 import '../navigation_state.dart';
-import '../pages/home_screen.dart' as hs;
+import '../pages/home_screen.dart';
 
 class EventLocationDialog extends StatefulWidget {
   final CalendarEvent event;
@@ -23,12 +23,17 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
   final _locationController = TextEditingController();
   bool _isEditing = false;
 
+  // The currently saved location — updated after a successful save
+  String? _savedLocation;
+
   @override
   void initState() {
     super.initState();
-    _locationController.text = widget.event.location ?? '';
-    _isEditing =
-        widget.event.location == null || widget.event.location!.isEmpty;
+    // Load from the event_locations table first, fall back to event.location
+    _savedLocation = _controller.getEventLocation(widget.event.id)
+        ?? widget.event.location;
+    _locationController.text = _savedLocation ?? '';
+    _isEditing = _savedLocation == null || _savedLocation!.isEmpty;
   }
 
   @override
@@ -37,11 +42,12 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
     super.dispose();
   }
 
+  bool get _hasLocation =>
+      _savedLocation != null && _savedLocation!.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     final moduleColor = _controller.getModuleColor(widget.event.moduleCode);
-    final hasLocation =
-        widget.event.location != null && widget.event.location!.isNotEmpty;
 
     return AlertDialog(
       backgroundColor: const Color(0xFF0F172A),
@@ -72,22 +78,66 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
           children: [
             _buildDetailRow('Start', _formatTime(widget.event.startTime)),
             _buildDetailRow('End', _formatTime(widget.event.endTime)),
-            _buildDetailRow('Duration', _formatDuration(widget.event.duration)),
+            _buildDetailRow(
+                'Duration', _formatDuration(widget.event.duration)),
             if (widget.event.moduleCode != null)
               _buildDetailRow('Module', widget.event.moduleCode!),
 
             const Divider(height: 24, color: Color(0xFF1E293B)),
 
+            // Location section
             if (_isEditing) ...[
+              const Text(
+                'Building location',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(height: 6),
               TextField(
                 controller: _locationController,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: 'Location',
-                  hintText: 'e.g., Park Building, Portsmouth',
+                  hintText:
+                  'e.g. Richmond Building, Portsmouth',
                   prefixIcon: Icon(Icons.location_on),
                 ),
                 autofocus: true,
+              ),
+              const SizedBox(height: 8),
+              // Hint box
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: const Color(0xFF3B82F6).withOpacity(0.3)),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 14, color: Color(0xFF3B82F6)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Include the city to get accurate directions. '
+                            'For example:\n'
+                            '• Richmond Building, Portsmouth\n'
+                            '• Portland Building, Portsmouth\n'
+                            '• Lion Gate Building, Portsmouth',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF94A3B8),
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ] else ...[
               Row(
@@ -97,41 +147,35 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      widget.event.location ?? 'No location set',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: hasLocation
-                            ? Colors.white
-                            : const Color(0xFF64748B),
-                        fontStyle: hasLocation
-                            ? FontStyle.normal
-                            : FontStyle.italic,
+                      _savedLocation!,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ],
               ),
 
-              // Navigate button — only when location is set
-              if (hasLocation) ...[
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _navigateToLocation(context),
-                    icon: const Icon(Icons.directions, size: 18),
-                    label: const Text('Navigate to this building'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+              const SizedBox(height: 16),
+
+              // Navigate button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _navigateToLocation(context),
+                  icon: const Icon(Icons.directions, size: 18),
+                  label: const Text('Navigate to this building'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-              ],
+              ),
             ],
           ],
         ),
@@ -140,10 +184,11 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
         if (_isEditing) ...[
           TextButton(
             onPressed: () {
-              if (hasLocation) {
+              if (_hasLocation) {
+                // Cancel edit — restore saved value
                 setState(() {
                   _isEditing = false;
-                  _locationController.text = widget.event.location!;
+                  _locationController.text = _savedLocation!;
                 });
               } else {
                 Navigator.pop(context);
@@ -171,11 +216,11 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
 
   void _navigateToLocation(BuildContext context) {
     final destination = MapDestination(
-      name: widget.event.location!,
-      address: widget.event.location!,
+      name: _savedLocation!,
+      address: _savedLocation!,
     );
     Navigator.pop(context);
-    hs.homeScreenKey.currentState?.navigateToMap(destination);
+    homeScreenKey.currentState?.navigateToMap(destination);
   }
 
   Widget _buildDetailRow(String label, String value) {
@@ -191,8 +236,7 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
           ),
           Expanded(
             child: Text(value,
-                style: const TextStyle(
-                    fontSize: 14, color: Colors.white)),
+                style: const TextStyle(fontSize: 14, color: Colors.white)),
           ),
         ],
       ),
@@ -215,9 +259,15 @@ class _EventLocationDialogState extends State<EventLocationDialog> {
 
   Future<void> _saveLocation() async {
     final location = _locationController.text.trim();
-    if (location.isNotEmpty) {
-      await _controller.updateEventLocation(widget.event.id, location);
-    }
-    if (mounted) Navigator.pop(context);
+    if (location.isEmpty) return;
+
+    await _controller.updateEventLocation(widget.event.id, location);
+
+    // Update local state so the dialog immediately shows the new value
+    // and the Navigate button uses the updated address
+    setState(() {
+      _savedLocation = location;
+      _isEditing = false;
+    });
   }
 }

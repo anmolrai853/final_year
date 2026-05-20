@@ -67,8 +67,10 @@ class _StudySessionDialogState extends State<StudySessionDialog> {
           minute: roundedMinute % 60,
         );
       }
-      
-      _durationMinutes = 60;
+
+      _durationMinutes = (widget.maxDurationMinutes != null && widget.maxDurationMinutes! < 60)
+          ? (widget.maxDurationMinutes! >= 30 ? widget.maxDurationMinutes! : 30)
+          : 60;
       _selectedType = StudySessionType.revision;
     }
     
@@ -211,7 +213,7 @@ class _StudySessionDialogState extends State<StudySessionDialog> {
                 Slider(
                   value: _durationMinutes,
                   min: 30,
-                  max: widget.maxDurationMinutes ?? (widget.session != null && widget.session!.durationMinutes > 180 ? widget.session!.durationMinutes.toDouble() : 180),                  divisions: ((widget.maxDurationMinutes ?? 180) - 30) ~/ 15,
+                  max: widget.maxDurationMinutes ?? (widget.session != null && widget.session!.durationMinutes > 180 ? widget.session!.durationMinutes.toDouble() : 180),                  divisions: (((widget.maxDurationMinutes ?? 180) - 30) / 15).round().clamp(1, 100),
                   label: '${_durationMinutes.toInt()} min',
                   onChanged: (value) {
                     // Round to nearest 15
