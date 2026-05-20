@@ -44,9 +44,9 @@ class _SettingsPageState extends State<SettingsPage> {
     await _storageService.saveNotificationPrefs(_notifPrefs.toJson());
     // Reschedule all notifications with new preferences
     await _notificationService.rescheduleAll(
-      events: _storageService.loadCalendarEvents(),
-      sessions: _storageService.loadStudySessions(),
-      deadlines: _storageService.loadDeadlines(),
+      events: await _storageService.loadCalendarEventsAsync(),
+      sessions: await _storageService.loadStudySessionsAsync(),
+      deadlines: await _storageService.loadDeadlinesAsync(),
     );
   }
 
@@ -130,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildInfoCard(
                 icon: Icons.code,
                 title: 'Built with Flutter',
-                subtitle: 'Using icalendar_parser & shared_preferences',
+                subtitle: 'Using icalendar_parser & SQLite',
               ),
 
               const SizedBox(height: 32),
@@ -516,37 +516,46 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+
+
   Widget _buildStatsSection() {
-    final sessions = _storageService.loadStudySessions();
-    final maps = _storageService.loadKnowledgeMaps();
-    final events = _storageService.loadCalendarEvents();
-    final deadlines = _storageService.loadDeadlines();
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _storageService.getStorageStatsAsync(),
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? {};
+        final events = stats['events'] ?? 0;
+        final sessions = stats['sessions'] ?? 0;
+        final deadlines = stats['deadlines'] ?? 0;
+        final maps = stats['maps'] ?? 0;
 
-    int totalNodes = 0;
-    for (final map in maps) {
-      final data = _storageService.getKnowledgeGraphData(map.id);
-      totalNodes += data?.nodes.length ?? 0;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF0F172A), borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Statistics', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildStatItem('Events', '${events.length}', Icons.event),
-              _buildStatItem('Sessions', '${sessions.length}', Icons.menu_book),
-              _buildStatItem('Deadlines', '${deadlines.length}', Icons.flag),
-              _buildStatItem('Maps', '${maps.length}', Icons.account_tree),
+              const Text('Statistics',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem('Events', '$events', Icons.event),
+                  _buildStatItem('Sessions', '$sessions', Icons.menu_book),
+                  _buildStatItem('Deadlines', '$deadlines', Icons.flag),
+                  _buildStatItem('Maps', '$maps', Icons.account_tree),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -579,11 +588,12 @@ class _SettingsPageState extends State<SettingsPage> {
         await _controller.loadFromIcs(content);
 
         // Schedule class notifications for imported events
-        final events = _storageService.loadCalendarEvents();
+        // Schedule class notifications for imported events
+        final events = await _storageService.loadCalendarEventsAsync();
         await _notificationService.rescheduleAll(
           events: events,
-          sessions: _storageService.loadStudySessions(),
-          deadlines: _storageService.loadDeadlines(),
+          sessions: await _storageService.loadStudySessionsAsync(),
+          deadlines: await _storageService.loadDeadlinesAsync(),
         );
 
         if (mounted) {

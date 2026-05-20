@@ -14,33 +14,30 @@ class NextEventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (event == null) {
-      return _buildNoEventCard();
-    }
+    if (event == null) return _buildNoEventCard();
 
     final timeFormat = DateFormat('HH:mm');
-    final dateFormat = DateFormat('EEEE, MMM d');
+    final dateFormat = DateFormat('EEE, MMM d');
     final now = DateTime.now();
-    
+
     final isToday = event!.startTime.year == now.year &&
-                   event!.startTime.month == now.month &&
-                   event!.startTime.day == now.day;
-    
+        event!.startTime.month == now.month &&
+        event!.startTime.day == now.day;
+
     final timeUntil = event!.startTime.difference(now);
     String timeUntilText;
-    
     if (timeUntil.inMinutes < 0) {
       timeUntilText = 'In progress';
     } else if (timeUntil.inMinutes < 60) {
-      timeUntilText = 'In ${timeUntil.inMinutes} minutes';
+      timeUntilText = 'In ${timeUntil.inMinutes}m';
     } else if (timeUntil.inHours < 24) {
-      timeUntilText = 'In ${timeUntil.inHours} hours';
+      timeUntilText = 'In ${timeUntil.inHours}h';
     } else {
-      timeUntilText = 'In ${timeUntil.inDays} days';
+      timeUntilText = 'In ${timeUntil.inDays}d';
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -50,24 +47,26 @@ class NextEventCard extends StatelessWidget {
             const Color(0xFF8B5CF6).withOpacity(0.8),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3B82F6).withOpacity(0.3),
-            blurRadius: 20,
-            spreadRadius: 2,
+            color: const Color(0xFF3B82F6).withOpacity(0.25),
+            blurRadius: 12,
+            spreadRadius: 1,
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Header row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -75,19 +74,14 @@ class NextEventCard extends StatelessWidget {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: Colors.white,
-                    ),
+                    Icon(Icons.access_time, size: 12, color: Colors.white),
                     SizedBox(width: 4),
                     Text(
                       'Next Event',
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white),
                     ),
                   ],
                 ),
@@ -95,101 +89,86 @@ class NextEventCard extends StatelessWidget {
               Text(
                 timeUntilText,
                 style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.9),
-                ),
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.9)),
               ),
             ],
           ),
-          
-          const SizedBox(height: 12),
-          
+
+          const SizedBox(height: 8),
+
           // Event title
           Text(
             event!.title,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          
-          const SizedBox(height: 12),
-          
-          // Event details
+
+          const SizedBox(height: 8),
+
+          // Time + date row
           Row(
             children: [
-              // Time
               Expanded(
-                child: _buildDetailItem(
+                child: _detailItem(
                   Icons.schedule,
                   '${timeFormat.format(event!.startTime)} - ${timeFormat.format(event!.endTime)}',
                 ),
               ),
-              
-              // Date
               Expanded(
-                child: _buildDetailItem(
+                child: _detailItem(
                   Icons.calendar_today,
                   isToday ? 'Today' : dateFormat.format(event!.startTime),
                 ),
               ),
             ],
           ),
-          
-          // Location (if available)
+
+          // Location row
           if (event!.location != null && event!.location!.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             GestureDetector(
               onTap: () => onLocationTap?.call(event!),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 16,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                  const SizedBox(width: 6),
+                  Icon(Icons.location_on,
+                      size: 13, color: Colors.white.withOpacity(0.8)),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       event!.location!,
                       style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.9)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Icon(
-                    Icons.edit,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.6),
-                  ),
+                  Icon(Icons.edit,
+                      size: 12, color: Colors.white.withOpacity(0.6)),
                 ],
               ),
             ),
           ] else ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             GestureDetector(
               onTap: () => onLocationTap?.call(event!),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.add_location,
-                    size: 16,
-                    color: Colors.white.withOpacity(0.6),
-                  ),
-                  const SizedBox(width: 6),
+                  Icon(Icons.add_location,
+                      size: 13, color: Colors.white.withOpacity(0.6)),
+                  const SizedBox(width: 4),
                   Text(
                     'Add location',
                     style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.7),
-                      fontStyle: FontStyle.italic,
-                    ),
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.7),
+                        fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
@@ -202,49 +181,31 @@ class NextEventCard extends StatelessWidget {
 
   Widget _buildNoEventCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF1E293B),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF1E293B)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.event_available,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
+          Icon(Icons.event_available, color: Color(0xFF64748B), size: 28),
+          SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'No upcoming events',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 2),
                 Text(
                   'Import your timetable to see events',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                  ),
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -254,23 +215,17 @@ class NextEventCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailItem(IconData icon, String text) {
+  Widget _detailItem(IconData icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.white.withOpacity(0.8),
-        ),
-        const SizedBox(width: 6),
+        Icon(icon, size: 13, color: Colors.white.withOpacity(0.8)),
+        const SizedBox(width: 4),
         Flexible(
           child: Text(
             text,
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withOpacity(0.9),
-            ),
+                fontSize: 12, color: Colors.white.withOpacity(0.9)),
             overflow: TextOverflow.ellipsis,
           ),
         ),
